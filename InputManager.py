@@ -63,8 +63,8 @@ class InputManager:
             lmp.command(f"pair_coeff * * {self.eps} {self.sigma}")
             lmp.command(f"fix 1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
             lmp.command(f"fix 3 all enforce2d")
-            
 
+        lmp.command(f"thermo		    {self.nthermo}")
 
 #    def format_params(self):
 #        """ Make a format string which can be either written to file or displayed in Qt."""

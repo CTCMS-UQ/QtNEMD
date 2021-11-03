@@ -14,9 +14,6 @@ from ui_mainwindow import Ui_MainWindow
 
 VERSION_NUMBER=0.01
 
-def thread_func(nsteps, iflag, lmp):
-    lmp.command(f"run {nsteps} pre no post no")
-
 class MainWindow(QtWidgets.QMainWindow):
     # Custom signal to communicate with real-time plot widgets
     # This needs to go here and not in the constructor. See: 
@@ -89,9 +86,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.x = coords[:,0]
         self.y = coords[:,1]
 
-        # Spin up a thread which will do MD steps
-        self.md_thread = Thread(target = thread_func, args=(1,0))
-
         # Fix the X and Y ranges so they don't constantly shift throughout the simulation
         self.ui.plot_window.clear()
         self.ui.plot_window.setXRange(0, self.lmp.get_thermo("lx"))
@@ -152,7 +146,6 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.ui.input_textbrowser.repaint()
 
     def toggle_ne_field(self, state):
-        pass
         # Toggles the nonequilibrium field (on or off) based on the status of nemd_checkbox
         if state == QtCore.Qt.Checked:
             self.params.do_nemd = True
@@ -163,32 +156,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
     ################################# Plotting routines ################################
     def update_plot_data(self):
-        # Get the number of steps to run our MD for and run
-        self.tau = self.lmp.extract_global("ntimestep")
+        # First, run an MD timestep
+        self.lmp.command(f"run 1 pre no post no")
 
-        # Set up field strength based on whether or not we're doing NEMD
-        """
-        if self.params.do_nemd:
-            TTCF.parm.field = self.params.fe0
-            iflag = 1
-        else:
-            TTCF.parm.field = 0.0
-            iflag = 0
-        """
-            
-        # join() the MD thread since we can't update until it's finished the MD step
-        self.md_thread.join()
+        # Get the current timestep
+        self.tau = self.lmp.extract_global("ntimestep")
 
         # Only plot the fluid particles for now
         coords = self.lmp.numpy.extract_atom("x")
         self.x = coords[:,0]
         self.y = coords[:,1]
 
+        # Send a signal that we've moved forward a timestep. This is currently useless, but will get
+        # used to synchronise other real-time plots
         self.timestep_update.emit(self.tau)
-        # Restart the MD thread in the background while we update the plot
-        self.md_thread = Thread(target = thread_func, args=(1,0, self.lmp))
-        self.md_thread.start()
-                                                                               
         self.data.setData(self.x, self.y)  # Update the data.
 
         # Update the temperature label
@@ -196,8 +177,6 @@ class MainWindow(QtWidgets.QMainWindow):
         vol = self.lmp.get_thermo("vol")
         self.ui.temperature_label.setText(f"Temperature = {temp:.2f}")
         self.ui.volume_label.setText(f"Volume = {vol:.2f}")
-
-        # Send the signal to update any open real-time plot windows
 
     def start_sim(self):
         """ Start the simulation.
@@ -217,13 +196,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.density_spinbox.setEnabled(False)
         self.ui.lj_spinbox.setEnabled(False)
         
-        # Finally, start the background computational (MD) thread. Check if it's running first so we
-        # don't get conflicts
-        try:
-            self.md_thread.start()
-        except RuntimeError:
-            self.md_thread = Thread(target = thread_func, args=(1,0,self.lmp))
-
+        # Finally, run an MD timestep
+        self.lmp.command(f"run 1 pre no post no")
+        
     def pause_sim(self):
         """ Pause the simulation.
             
@@ -235,21 +210,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.start_button.setEnabled(True)
         self.ui.pause_button.setEnabled(False)
 
-        # Join the worker thread so it isn't left hanging
-        if(self.md_thread.is_alive()):
-            self.md_thread.join()
-            self.md_thread = Thread(target = thread_func, args=(1,0, self.lmp))
-
     def restart_sim(self, sender = None):
         """ Restart the simulation by stopping the timer and reinitialising parameters."""
         if self.sim_timer.isActive():
             self.sim_timer.stop()
         self.tau = 0
-
-        # Join the worker thread so it isn't left hanging
-        if(self.md_thread.is_alive()):
-            self.md_thread.join()
-            self.md_thread = Thread(target = thread_func, args=(1,0))
 
         self.params.reset_and_update(self.lmp)
 

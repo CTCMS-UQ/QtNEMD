@@ -12,7 +12,7 @@ class InputManager:
         self.eps = 1.0
 
         # Simulation parameters
-        self.flowrate = 0.01
+        self.flowrate = 0.1
         self.temp = 1.0
         self.do_nemd = False
 

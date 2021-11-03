@@ -81,6 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def initialise_simulation(self):
 
         self.params.reset_and_update(self.lmp)
+        self.lmp.command("run 0 pre yes post no")
         # Only plot the fluid particles for now
         coords = self.lmp.numpy.extract_atom("x")
         self.x = coords[:,0]
@@ -97,7 +98,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Initialise the N, V and T labels
         npart = self.lmp.get_natoms()
         self.ui.npart_label.setText(f"N particles = {npart}")
-        self.ui.volume_label.setText(f"Area = {self.params.xmax * self.params.ymax}")
+        area = self.lmp.get_thermo("lx")*self.lmp.get_thermo("ly")
+        self.ui.volume_label.setText(f"Area = {area:.2f}")
         self.ui.temperature_label.setText(f"Temperature = {self.params.temp}")
 
         # Finally, set the simulation controls to the correct value
@@ -193,6 +195,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.field_spinbox.setEnabled(False)
         self.ui.density_spinbox.setEnabled(False)
         self.ui.lj_spinbox.setEnabled(False)
+        self.ui.nemd_checkbox.setEnabled(False)
         
         # Finally, run an MD timestep
         self.lmp.command(f"run 1 pre no post no")
@@ -235,6 +238,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.density_spinbox.setEnabled(True)
         self.ui.start_button.setEnabled(True)
         self.ui.lj_spinbox.setEnabled(True)
+        self.ui.nemd_checkbox.setEnabled(True)
+
         self.initialise_simulation()
 
     ######################### I/O Control routines ####################################

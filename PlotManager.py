@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Widget and logic to control real-time plotting
 import sys
-import TTCF
+import lammps
 import numpy as np
 from PyQt5 import QtWidgets, QtCore, QtGui
 import pyqtgraph as pg

@@ -14,7 +14,8 @@ class InputManager:
         # Simulation parameters
         self.flowrate = 0.01
         self.temp = 1.0
-        self.nthermo = 10
+        self.nthermo = 1000
+        self.do_nemd = False
 
     def reset_and_update(self, lmp):
         # Reset the simulation and initialise the parameters
@@ -36,19 +37,34 @@ class InputManager:
         lmp.command(f"pair_coeff	    * * {self.eps} {self.sigma} 1.0")
         lmp.command(f"neighbor	        0.3 bin")
         lmp.command(f"neigh_modify	    delay 0 every 1")
-        lmp.command(f"fix		        1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1")
-        lmp.command(f"fix		        2 all deform 1 xy erate {self.flowrate} remap v")
+        if self.do_nemd:
+            lmp.command(f"fix		        1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1")
+            lmp.command(f"fix		        2 all deform 1 xy erate {self.flowrate} remap v")
+        else:
+            lmp.command(f"fix		        1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
+
         lmp.command(f"fix               3 all enforce2d")
         lmp.command(f"thermo		    {self.nthermo}")
 
     def update_parameters(self, lmp):
         # Only update the parameters which don't require a reset
-        lmp.command("unfix 1")
-        lmp.command("unfix 2")
-        
-        lmp.command(f"pair_coeff * * {self.eps} {self.sigma}")
-        lmp.command(f"fix 1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1")
-        lmp.command(f"fix 2 all deform 1 xy erate {self.flowrate} remap v")
+        if self.do_nemd:
+            lmp.command("unfix 1")
+            lmp.command("unfix 2")
+            lmp.command("unfix 3")
+            
+            lmp.command(f"pair_coeff * * {self.eps} {self.sigma}")
+            lmp.command(f"fix 1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1")
+            lmp.command(f"fix 2 all deform 1 xy erate {self.flowrate} remap v")
+            lmp.command(f"fix 3 all enforce2d")
+        else:
+            lmp.command("unfix 1")
+            lmp.command("unfix 3")
+            lmp.command(f"pair_coeff * * {self.eps} {self.sigma}")
+            lmp.command(f"fix 1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
+            lmp.command(f"fix 3 all enforce2d")
+            
+
 
 #    def format_params(self):
 #        """ Make a format string which can be either written to file or displayed in Qt."""

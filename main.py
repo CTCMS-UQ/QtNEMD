@@ -148,11 +148,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def toggle_ne_field(self, state):
         # Toggles the nonequilibrium field (on or off) based on the status of nemd_checkbox
         if state == QtCore.Qt.Checked:
-            self.params.do_nemd = True
-            self.params.update_parameters(self.lmp)
+            self.params.toggle_nemd(self.lmp)
         else:
-            self.params.do_nemd = False
-            self.params.update_parameters(self.lmp)
+            self.params.toggle_nemd(self.lmp)
 
     ################################# Plotting routines ################################
     def update_plot_data(self):

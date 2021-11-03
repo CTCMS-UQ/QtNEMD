@@ -14,7 +14,6 @@ class InputManager:
         # Simulation parameters
         self.flowrate = 0.01
         self.temp = 1.0
-        self.nthermo = 1000
         self.do_nemd = False
 
     def reset_and_update(self, lmp):
@@ -44,7 +43,6 @@ class InputManager:
             lmp.command(f"fix		        1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
 
         lmp.command(f"fix               3 all enforce2d")
-        lmp.command(f"thermo		    {self.nthermo}")
 
     def update_parameters(self, lmp):
         # Only update the parameters which don't require a reset
@@ -64,7 +62,28 @@ class InputManager:
             lmp.command(f"fix 1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
             lmp.command(f"fix 3 all enforce2d")
 
-        lmp.command(f"thermo		    {self.nthermo}")
+    def toggle_nemd(self, lmp):
+        # Toggle NEMD field on or off. This needs to be a separate function to update_parameters() since
+        # different fixes are defined (and therefore different fixes need to be deleted) depending on
+        # whether or not we're doing NEMD. E.g. if we just do update_parameters() after switching
+        # do_nemd to True then it will try to do "unfix 2" which will not be defined (since we we're
+        # previously doing equilibrium simulations) and throw an exception.
+        if self.do_nemd:
+            lmp.command("unfix 1")
+            lmp.command("unfix 2")
+            lmp.command("unfix 3")
+            self.do_nemd = False
+
+            lmp.command(f"fix 1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
+            lmp.command(f"fix 3 all enforce2d")            
+        else:
+            lmp.command("unfix 1")
+            lmp.command("unfix 3")
+            self.do_nemd = True
+
+            lmp.command(f"fix 1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1")
+            lmp.command(f"fix 2 all deform 1 xy erate {self.flowrate} remap v")
+            lmp.command(f"fix 3 all enforce2d")
 
 #    def format_params(self):
 #        """ Make a format string which can be either written to file or displayed in Qt."""

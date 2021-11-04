@@ -59,10 +59,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.restart_button.clicked.connect(self.restart_sim)
        
         # Add signals so spin-boxes change the underlying simulation parameters
-        self.ui.lj_spinbox.editingFinished.connect(self.update_parameters)
+        self.ui.lj_eps_spinbox.editingFinished.connect(self.update_parameters)
+        self.ui.lj_sigma_spinbox.editingFinished.connect(self.update_parameters)
         self.ui.field_spinbox.editingFinished.connect(self.update_parameters)
         #self.ui.e0_spinbox.editingFinished.connect(self.update_parameters)
-        self.ui.tr_spinbox.editingFinished.connect(self.update_parameters)
+        self.ui.temp_spinbox.editingFinished.connect(self.update_parameters)
         self.ui.density_spinbox.editingFinished.connect(self.update_parameters)
 
         # Checkbox to toggle NEMD field
@@ -71,8 +72,13 @@ class MainWindow(QtWidgets.QMainWindow):
         # Now initialise (but don't start) a timer to update the plot
         self.sim_timer = QtCore.QTimer()
         self.sim_timer.setInterval(8)
+
+        # Now do a longer timer for updating the UI elements (but not the plot)
+        self.gui_timer = QtCore.QTimer()
+        self.gui_timer.setInterval(60)
         # Connect the timer's "timeout" (finished) event to our update function
         self.sim_timer.timeout.connect(self.update_plot_data)
+        self.gui_timer.timeout.connect(self.update_GUI_elements)
 
         # Now connect the file editing dialog to our open and close menu buttons
         self.ui.open_input_file.triggered.connect(self.open_input_file)
@@ -88,16 +94,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lmp.command("run 0")
         # Only plot the fluid particles for now
         coords = self.lmp.numpy.extract_atom("x")
-        self.x = coords[:,0]
-        self.y = coords[:,1]
+        x = coords[:,0]
+        y = coords[:,1]
 
         # Fix the X and Y ranges so they don't constantly shift throughout the simulation
         self.ui.plot_window.clear()
         self.ui.plot_window.setXRange(0, self.lmp.get_thermo("lx"))
         self.ui.plot_window.setYRange(0, self.lmp.get_thermo("ly"))
-
         self.ui.plot_window.setBackground('w')
-        self.data =  self.ui.plot_window.plot(self.x, self.y, pen=None, symbol = 'o')
+        self.pos_data = self.ui.plot_window.plot(x, y, pen=None, symbol = 'o')
+
+        # Now do the g(2) radial-distribution function
+        g2_compute = self.lmp.numpy.extract_compute("g2", lammps.LMP_STYLE_GLOBAL, lammps.LMP_TYPE_ARRAY)
+        r = g2_compute[:,0]
+        g2 = g2_compute[:,1]
+        self.ui.g2_window.setXRange(0, max(r)+1)
+        self.ui.g2_window.setYRange(0, max(g2)+1)
+        self.ui.g2_window.setBackground('w')
+        self.g2_data = self.ui.g2_window.plot(r, g2, color='k')
+        
 
         # Initialise the N, V and T labels
         npart = self.lmp.get_natoms()
@@ -107,9 +122,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.temperature_label.setText(f"Temperature = {self.params.temp}")
 
         # Finally, set the simulation controls to the correct value
-        self.ui.lj_spinbox.setValue(self.params.eps)
+        self.ui.lj_eps_spinbox.setValue(self.params.eps)
+        self.ui.lj_sigma_spinbox.setValue(self.params.sigma)
         self.ui.field_spinbox.setValue(self.params.flowrate)
-        self.ui.tr_spinbox.setValue(self.params.temp)
+        self.ui.temp_spinbox.setValue(self.params.temp)
         # Need to get LAMMPS to compute the kinetic energy
         #self.ui.e0_spinbox.setValue(TTCF.inener.e0)
         self.ui.density_spinbox.setValue(self.params.reduced_density)
@@ -120,8 +136,12 @@ class MainWindow(QtWidgets.QMainWindow):
         value = sender.value()
 
         # Now change the appropriate simulation parameter
-        if sender == self.ui.lj_spinbox:
+        if sender == self.ui.lj_eps_spinbox:
             self.params.eps = value
+            self.params.update_parameters(self.lmp)
+
+        if sender == self.ui.lj_sigma_spinbox:
+            self.params.sigma = value
             self.params.update_parameters(self.lmp)
 
         elif sender == self.ui.field_spinbox:
@@ -130,14 +150,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # These spinboxes control initial parameters, and require the simulation to be restarted after
         # changing
-        elif sender == self.ui.tr_spinbox:
+        elif sender == self.ui.temp_spinbox:
             self.params.temp = value
             self.params.reset_and_update(self.lmp)
-
-        #elif sender == self.ui.e0_spinbox:
-        #    TTCF.inener.e0 = value
-        #    self.params.e0 = value
-        #    self.restart_sim(sender)
 
         elif sender == self.ui.density_spinbox:
             self.params.reduced_density = value
@@ -175,15 +190,24 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Only plot the fluid particles for now
         coords = self.lmp.numpy.extract_atom("x")
-        self.x = coords[:,0]
-        self.y = coords[:,1]
+        x = coords[:,0]
+        y = coords[:,1]
+        self.pos_data.setData(x, y)  # Update the data.
 
         # Send a signal that we've moved forward a timestep. This is currently useless, but will get
         # used to synchronise other real-time plots
         self.timestep_update.emit(self.tau)
-        self.data.setData(self.x, self.y)  # Update the data.
 
-        # Update the temperature label
+        # Now do the g(2) radial-distribution function
+        g2_compute = self.lmp.numpy.extract_compute("g2", lammps.LMP_STYLE_GLOBAL, lammps.LMP_TYPE_ARRAY)
+        r = g2_compute[:,0]
+        g2 = g2_compute[:,1]
+        self.ui.g2_window.setXRange(0, max(r)+1)
+        self.ui.g2_window.setYRange(0, max(g2)+1)
+        self.g2_data.setData(r, g2)
+
+    def update_GUI_elements(self):
+        # Update the temperature and volume labels
         temp = self.lmp.get_thermo("temp")
         vol = self.lmp.get_thermo("vol")
         self.ui.temperature_label.setText(f"Temperature = {temp:.2f}")
@@ -195,17 +219,19 @@ class MainWindow(QtWidgets.QMainWindow):
             The timer has already been initialised and linked to the update function, so we only need to
             start the timer here."""
         self.sim_timer.start()
+        self.gui_timer.start()
 
         self.ui.start_button.setEnabled(False)
         self.ui.pause_button.setEnabled(True)
 
         # Also want to disable the Npart spinbox, since it makes no sense to change the particle number
         # while the simulation is running
-        self.ui.tr_spinbox.setEnabled(False)
+        self.ui.temp_spinbox.setEnabled(False)
         #self.ui.e0_spinbox.setEnabled(False)
         #self.ui.field_spinbox.setEnabled(False)
         self.ui.density_spinbox.setEnabled(False)
-        self.ui.lj_spinbox.setEnabled(False)
+        self.ui.lj_eps_spinbox.setEnabled(False)
+        self.ui.lj_sigma_spinbox.setEnabled(False)
         
         # Finally, run an MD timestep
         self.lmp.command(f"run 1 ")
@@ -217,6 +243,7 @@ class MainWindow(QtWidgets.QMainWindow):
             updating. It will start back up again when the timer is restarted."""
         if self.sim_timer.isActive():
             self.sim_timer.stop()
+            self.gui_timer.stop()
 
         self.ui.start_button.setEnabled(True)
         self.ui.pause_button.setEnabled(False)
@@ -225,29 +252,42 @@ class MainWindow(QtWidgets.QMainWindow):
         """ Restart the simulation by stopping the timer and reinitialising parameters."""
         if self.sim_timer.isActive():
             self.sim_timer.stop()
+            self.gui_timer.stop()
         self.tau = 0
 
         self.params.reset_and_update(self.lmp)
 
+        # Calculate thermodynamic variables
+        self.lmp.command("run 0")
+
         # Only plot the fluid particles for now
         coords = self.lmp.numpy.extract_atom("x")
-        self.x = coords[:,0]
-        self.y = coords[:,1]
+        x = coords[:,0]
+        y = coords[:,1]
 
         # Fix the X and Y ranges so they don't constantly shift throughout the simulation
+        self.ui.plot_window.clear()
         self.ui.plot_window.setXRange(0, self.lmp.get_thermo("lx"))
         self.ui.plot_window.setYRange(0, self.lmp.get_thermo("ly"))
 
         self.ui.plot_window.setBackground('w')
-        self.data.setData(self.x, self.y, pen=None, symbol = 'o')
+        self.pos_data = self.ui.plot_window.plot(x, y, pen=None, symbol = 'o')
+
+        # Now do the g(2) radial-distribution function
+        g2_compute = self.lmp.numpy.extract_compute("g2", lammps.LMP_STYLE_GLOBAL, lammps.LMP_TYPE_ARRAY)
+        r = g2_compute[:,0]
+        g2 = g2_compute[:,1]
+        self.ui.g2_window.clear()
+        self.g2_data = self.ui.g2_window.plot(r, g2)
 
         # Re-enable buttons which can't be changed while the simulation is running
-        self.ui.tr_spinbox.setEnabled(True)
+        self.ui.temp_spinbox.setEnabled(True)
         #self.ui.e0_spinbox.setEnabled(True)
         #self.ui.field_spinbox.setEnabled(True)
         self.ui.density_spinbox.setEnabled(True)
         self.ui.start_button.setEnabled(True)
-        self.ui.lj_spinbox.setEnabled(True)
+        self.ui.lj_eps_spinbox.setEnabled(True)
+        self.ui.lj_sigma_spinbox.setEnabled(True)
 
         self.initialise_simulation()
 
@@ -267,6 +307,7 @@ class MainWindow(QtWidgets.QMainWindow):
             
     def save_to_file(self):
         self.sim_timer.stop()
+        self.gui_timer.stop()
         output_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File", "", "Input Files (*.in)")
         if output_file:
             out_string = self.params.format_params()

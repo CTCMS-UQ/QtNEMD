@@ -16,6 +16,9 @@ class InputManager:
         self.temp = 1.0
         self.do_nemd = False
 
+        # LJ cutoff parameter. This is just to aid in plotting, probably don't want to change this
+        self.rcut = 2.5
+
     def reset_and_update(self, lmp):
         # Reset the simulation and initialise the parameters
         lmp.command(f"clear")
@@ -32,10 +35,11 @@ class InputManager:
         lmp.command(f"velocity	        all create 1.44 87287 loop geom")
         lmp.command(f"region		    slice block 4 6 INF INF INF INF")
         lmp.command(f"set		        region slice type 2")
-        lmp.command(f"pair_style	    lj/cut 2.5")
-        lmp.command(f"pair_coeff	    * * {self.eps} {self.sigma} 1.0")
+        lmp.command(f"pair_style	    lj/cut {self.rcut}")
+        lmp.command(f"pair_coeff	    * * {self.eps} {self.sigma}")
         lmp.command(f"neighbor	        0.3 bin")
         lmp.command(f"neigh_modify	    delay 0 every 1")
+        lmp.command("compute            g2 all rdf 100")
         if self.do_nemd:
             lmp.command("compute        sllodtemp all temp/deform")
             lmp.command("thermo_modify  temp sllodtemp")

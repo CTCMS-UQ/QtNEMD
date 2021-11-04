@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>963</width>
-    <height>608</height>
+    <width>1454</width>
+    <height>727</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -82,17 +82,38 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QCheckBox" name="nemd_checkbox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Enable NEMD field</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QCheckBox" name="nemd_checkbox">
+          <property name="text">
+           <string>Enable NEMD</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="twod_button">
+          <property name="text">
+           <string>2D</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">dimensionButtonGroup</string>
+          </attribute>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="threed_button">
+          <property name="text">
+           <string>3D (Colour = depth)</string>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">dimensionButtonGroup</string>
+          </attribute>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -143,7 +164,7 @@
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QDoubleSpinBox" name="lj_spinbox">
+           <widget class="QDoubleSpinBox" name="lj_eps_spinbox">
             <property name="minimumSize">
              <size>
               <width>129</width>
@@ -177,9 +198,29 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLabel" name="lj_label">
+           <widget class="QLabel" name="lj_eps_label">
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;WCA ε&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LJ ε&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QDoubleSpinBox" name="lj_sigma_spinbox">
+            <property name="minimumSize">
+             <size>
+              <width>129</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="lj_sigma_label">
+            <property name="text">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LJ σ&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
            </widget>
           </item>
@@ -214,7 +255,7 @@
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QDoubleSpinBox" name="tr_spinbox">
+           <widget class="QDoubleSpinBox" name="temp_spinbox">
             <property name="minimumSize">
              <size>
               <width>129</width>
@@ -262,9 +303,26 @@
        </layout>
       </item>
       <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;g&lt;span style=&quot; vertical-align:super;&quot;&gt;(2)&lt;/span&gt;(r) structure factor&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="PlotWidget" name="g2_window"/>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
        <widget class="QLabel" name="textbrowser_label">
         <property name="text">
-         <string>Input parameters (read-only)</string>
+         <string>LAMMPS Input file (read only)</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -299,7 +357,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>963</width>
+     <width>1454</width>
      <height>29</height>
     </rect>
    </property>
@@ -397,4 +455,7 @@
    </hints>
   </connection>
  </connections>
+ <buttongroups>
+  <buttongroup name="dimensionButtonGroup"/>
+ </buttongroups>
 </ui>

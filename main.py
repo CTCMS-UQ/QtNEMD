@@ -3,6 +3,7 @@ import lammps
 import InputManager
 import PlotManager
 import sys 
+import os
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 import pyqtgraph as pg
@@ -26,8 +27,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
+        # Set the OMP_NUM_THREADS environment variable so LAMMPS doesn't complain
+        os.environ['OMP_NUM_THREADS'] = str(1)
         # LAMMPS instance
-        self.lmp = lammps.lammps()
+        lmp_args = ["-log", "none", "-screen", "none"]
+        self.lmp = lammps.lammps(cmdargs=lmp_args)
 
         # Timestep
         self.tau = 0
@@ -44,8 +48,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Initialise the simulation to its default values
         self.params = InputManager.InputManager()
         # Print the input values to the QTextBrowser widget
-        #self.param_str = self.params.format_params()
-        #self.ui.input_textbrowser.setPlainText(self.param_str)
+        self.param_str = self.params.format_params()
+        self.ui.input_textbrowser.setPlainText(self.param_str)
         self.initialise_simulation()
 
     def register_handlers(self):
@@ -143,9 +147,9 @@ class MainWindow(QtWidgets.QMainWindow):
             print("Unknown sender")
             pass
         ## Finally, update the input values in the QTextBrowser widget
-        #self.param_str = self.params.format_params()
-        #self.ui.input_textbrowser.setPlainText(self.param_str)
-        #self.ui.input_textbrowser.repaint()
+        self.param_str = self.params.format_params()
+        self.ui.input_textbrowser.setPlainText(self.param_str)
+        self.ui.input_textbrowser.repaint()
 
     def toggle_ne_field(self, state):
         # Toggles the nonequilibrium field (on or off) based on the status of nemd_checkbox
@@ -153,6 +157,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.params.toggle_nemd(self.lmp)
         else:
             self.params.toggle_nemd(self.lmp)
+
+        ## Finally, update the input values in the QTextBrowser widget
+        self.param_str = self.params.format_params()
+        self.ui.input_textbrowser.setPlainText(self.param_str)
+        self.ui.input_textbrowser.repaint()
+
 
     ################################# Plotting routines ################################
     def update_plot_data(self):
@@ -256,13 +266,12 @@ class MainWindow(QtWidgets.QMainWindow):
         #    self.initialise_simulation()
             
     def save_to_file(self):
-        pass
-        #self.sim_timer.stop()
-        #output_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File", "", "Input Files (*.in)")
-        #if output_file:
-        #    out_string = self.params.format_params()
-        #    with open(output_file, 'w') as ofp:
-        #        ofp.write(out_string)
+        self.sim_timer.stop()
+        output_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File", "", "Input Files (*.in)")
+        if output_file:
+            out_string = self.params.format_params()
+            with open(output_file, 'w') as ofp:
+                ofp.write(out_string)
 
     def open_new_plot(self):
         pass

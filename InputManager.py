@@ -37,10 +37,12 @@ class InputManager:
         lmp.command(f"neighbor	        0.3 bin")
         lmp.command(f"neigh_modify	    delay 0 every 1")
         if self.do_nemd:
-            lmp.command(f"fix		        1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1")
-            lmp.command(f"fix		        2 all deform 1 xy erate {self.flowrate} remap v")
+            lmp.command("compute        sllodtemp all temp/deform")
+            lmp.command("thermo_modify  temp sllodtemp")
+            lmp.command(f"fix		    1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1")
+            lmp.command(f"fix		    2 all deform 1 xy erate {self.flowrate} remap v")
         else:
-            lmp.command(f"fix		        1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
+            lmp.command(f"fix		    1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
 
         lmp.command(f"fix               3 all enforce2d")
 
@@ -50,8 +52,13 @@ class InputManager:
             lmp.command("unfix 1")
             lmp.command("unfix 2")
             lmp.command("unfix 3")
+            lmp.command("uncompute sllodtemp")
             
             lmp.command(f"pair_coeff * * {self.eps} {self.sigma}")
+
+            lmp.command("compute sllodtemp all temp/deform")
+            lmp.command("thermo_modify temp sllodtemp")
+
             lmp.command(f"fix 1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1")
             lmp.command(f"fix 2 all deform 1 xy erate {self.flowrate} remap v")
             lmp.command(f"fix 3 all enforce2d")
@@ -72,6 +79,7 @@ class InputManager:
             lmp.command("unfix 1")
             lmp.command("unfix 2")
             lmp.command("unfix 3")
+            lmp.command("uncompute sllodtemp")
             self.do_nemd = False
 
             lmp.command(f"fix 1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
@@ -81,29 +89,41 @@ class InputManager:
             lmp.command("unfix 3")
             self.do_nemd = True
 
+            lmp.command("compute sllodtemp all temp/deform")
+            lmp.command("thermo_modify temp sllodtemp")
+
             lmp.command(f"fix 1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1")
             lmp.command(f"fix 2 all deform 1 xy erate {self.flowrate} remap v")
             lmp.command(f"fix 3 all enforce2d")
 
-#    def format_params(self):
-#        """ Make a format string which can be either written to file or displayed in Qt."""
-#        
-#        # Write the input parameters, making sure to preserve whitespace and newlines
-#        param_str  = f"""{self.tr:.3f} {self.drw:.3f} {self.drf:.3f} {self.delta:.3f} {self.latt} {self.npart} 25"""
-#        param_str += f"""\n{self.fe0:.3f} {self.rcut:.3f} 1 {self.kh:.3f} {self.nprint} """
-#        param_str += f"""\n{self.mix:.3f} {self.eps1:.3f} {self.eps2:.3f} {self.qvol:.3f}"""
-#        param_str += f"""\n{self.kf:.3f} {self.r0:.3f} {self.limol:.3f} {self.yzdivx:.3f}"""
-#        param_str += f"""\n{self.dxxdiv:.3f}"""
-#        param_str += f"""\n{self.ntype} {self.non} {self.ngaus} {self.e0:.3f}"""
-#        param_str += f"""\n{self.nplot} {self.maxtau} {self.eqtim} {self.ncyc}"""
-#
-#        # Now write the header
-#        param_str += """\nTR,DRW,DRF,DELTA,LATT,NPART,NLP
-#FE0,RCUT,NLAYER,KH,NPRINT
-#MIX, EPS1, EPS2, QVOL
-#KF,R0,LIMOL,YZDIVX
-#DXXDIV
-#NTYPE,NON,NGAUS,E0
-#NPLOT,MAXTAU,EQTIM,NCYC"""
-#        
-#        return(param_str)
+    def format_params(self):
+        """ Make a format string for the input which can be either written to file or displayed in Qt."""
+        
+        # Write the input parameters, making sure to preserve whitespace and newlines
+        param_str  =        f"""units lj"""
+        param_str +=        f"""\natom_style atomic"""
+        param_str +=        f"""\ndimension 2"""
+        param_str +=        f"""\nlattice sq2 {self.reduced_density}"""
+        param_str +=        f"""\nregion box prism 0 {self.xmax} 0 {self.ymax} -{self.zmax}  {self.zmax} 0 0 0"""
+        param_str +=        f"""\ncreate_box 2 box"""
+        param_str +=        f"""\ncreate_atoms 1 box"""
+        param_str +=        f"""\nmass * 1.0"""
+        param_str +=        f"""\nvelocity all create 1.44 87287 loop geom"""
+        param_str +=        f"""\nregion slice block 4 6 INF INF INF INF"""
+        param_str +=        f"""\nset region slice type 2"""
+        param_str +=        f"""\npair_style lj/cut 2.5"""
+        param_str +=        f"""\npair_coeff * * {self.eps} {self.sigma} 1.0"""
+        param_str +=        f"""\nneighbor 0.3 bin"""
+        param_str +=        f"""\nneigh_modify 0 every 1"""
+        if self.do_nemd:
+            param_str +=    f"""\ncompute all temp/deform"""
+            param_str +=    f"""\nthermo_modify temp sllodtemp"""
+            param_str +=    f"""\nfix 1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1"""
+            param_str +=    f"""\nfix 2 all deform 1 xy erate {self.flowrate} remap v"""
+        else:
+            param_str +=    f"""\nfix 1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1"""
+
+        param_str +=        f"""\nfix 3 all enforce2d\n"""
+
+
+        return(param_str)

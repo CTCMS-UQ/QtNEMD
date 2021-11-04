@@ -81,7 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def initialise_simulation(self):
 
         self.params.reset_and_update(self.lmp)
-        self.lmp.command("run 0 pre yes post no")
+        self.lmp.command("run 0")
         # Only plot the fluid particles for now
         coords = self.lmp.numpy.extract_atom("x")
         self.x = coords[:,0]
@@ -120,6 +120,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.params.eps = value
             self.params.update_parameters(self.lmp)
 
+        elif sender == self.ui.field_spinbox:
+            self.params.flowrate = value
+            self.params.update_parameters(self.lmp)
+
         # These spinboxes control initial parameters, and require the simulation to be restarted after
         # changing
         elif sender == self.ui.tr_spinbox:
@@ -133,10 +137,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         elif sender == self.ui.density_spinbox:
             self.params.reduced_density = value
-            self.params.reset_and_update(self.lmp)
-
-        elif sender == self.ui.field_spinbox:
-            self.params.flowrate = value
             self.params.reset_and_update(self.lmp)
 
         else:
@@ -157,7 +157,8 @@ class MainWindow(QtWidgets.QMainWindow):
     ################################# Plotting routines ################################
     def update_plot_data(self):
         # First, run an MD timestep
-        self.lmp.command(f"run 1 pre no post no")
+        #self.lmp.command(f"run 1 pre no post no")
+        self.lmp.command(f"run 1")
 
         # Get the current timestep
         self.tau = self.lmp.extract_global("ntimestep")
@@ -192,13 +193,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # while the simulation is running
         self.ui.tr_spinbox.setEnabled(False)
         #self.ui.e0_spinbox.setEnabled(False)
-        self.ui.field_spinbox.setEnabled(False)
+        #self.ui.field_spinbox.setEnabled(False)
         self.ui.density_spinbox.setEnabled(False)
         self.ui.lj_spinbox.setEnabled(False)
-        self.ui.nemd_checkbox.setEnabled(False)
         
         # Finally, run an MD timestep
-        self.lmp.command(f"run 1 pre no post no")
+        self.lmp.command(f"run 1 ")
         
     def pause_sim(self):
         """ Pause the simulation.
@@ -234,11 +234,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # Re-enable buttons which can't be changed while the simulation is running
         self.ui.tr_spinbox.setEnabled(True)
         #self.ui.e0_spinbox.setEnabled(True)
-        self.ui.field_spinbox.setEnabled(True)
+        #self.ui.field_spinbox.setEnabled(True)
         self.ui.density_spinbox.setEnabled(True)
         self.ui.start_button.setEnabled(True)
         self.ui.lj_spinbox.setEnabled(True)
-        self.ui.nemd_checkbox.setEnabled(True)
 
         self.initialise_simulation()
 

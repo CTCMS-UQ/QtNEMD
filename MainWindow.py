@@ -35,10 +35,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Start with the pause button disabled until we start the simulation
         self.ui.pause_button.setEnabled(False)
 
-        # Initialise the simulation to its default values
-        self.params = InputManager.InputManager()
         # Print the input values to the QTextBrowser widget
-        self.param_str = self.params.format_params()
+        self.param_str = self.md.format_params()
         self.ui.input_textbrowser.setPlainText(self.param_str)
         self.initialise_simulation()
 
@@ -81,22 +79,19 @@ class MainWindow(QtWidgets.QMainWindow):
     def initialise_simulation(self):
 
         self.md.setup()
-        # Only plot the fluid particles for now
-        coords = self.lmp.numpy.extract_atom("x")
-        x = coords[:,0]
-        y = coords[:,1]
 
         # Fix the X and Y ranges so they don't constantly shift throughout the simulation
         self.ui.plot_window.clear()
-        self.ui.plot_window.setXRange(0, self.lmp.get_thermo("lx"))
-        self.ui.plot_window.setYRange(0, self.lmp.get_thermo("ly"))
+        bounds = self.md.box_bounds
+        self.ui.plot_window.setXRange(0, bounds[0])
+        self.ui.plot_window.setYRange(0, bounds[1])
         self.ui.plot_window.setBackground('w')
-        self.pos_data = self.ui.plot_window.plot(x, y, pen=None, symbol = 'o')
+        self.pos_data = self.ui.plot_window.plot(self.md.x, self.md.y, pen=None, symbol = 'o')
 
         # Now do the g(2) radial-distribution function
-        g2_compute = self.lmp.numpy.extract_compute("g2", lammps.LMP_STYLE_GLOBAL, lammps.LMP_TYPE_ARRAY)
-        r = g2_compute[:,0]
-        g2 = g2_compute[:,1]
+        g2_compute = self.md.g2_compute()
+        r = g2_compute['r']
+        g2 = g2_compute['g2']
         self.ui.g2_window.setXRange(0, max(r)+1)
         self.ui.g2_window.setYRange(0, max(g2)+1)
         self.ui.g2_window.setBackground('w')
@@ -104,19 +99,18 @@ class MainWindow(QtWidgets.QMainWindow):
         
 
         # Initialise the N, V and T labels
-        self.ui.npart_label.setText(f"N particles = {npart}")
-        area = self.lmp.get_thermo("lx")*self.lmp.get_thermo("ly")
-        self.ui.volume_label.setText(f"Area = {area:.2f}")
-        self.ui.temperature_label.setText(f"Temperature = {self.params.temp}")
+        self.ui.npart_label.setText(f"N particles = {self.md.npart}")
+        self.ui.volume_label.setText(f"Vol = {self.md.vol:.2f}")
+        self.ui.temperature_label.setText(f"Temperature = {self.md.temp}")
 
         # Finally, set the simulation controls to the correct value
-        self.ui.lj_eps_spinbox.setValue(self.params.eps)
-        self.ui.lj_sigma_spinbox.setValue(self.params.sigma)
-        self.ui.field_spinbox.setValue(self.params.flowrate)
-        self.ui.temp_spinbox.setValue(self.params.temp)
+        self.ui.lj_eps_spinbox.setValue(self.md.eps)
+        self.ui.lj_sigma_spinbox.setValue(self.md.sigma)
+        self.ui.field_spinbox.setValue(self.md.flowrate)
+        self.ui.temp_spinbox.setValue(self.md.temp)
         # Need to get LAMMPS to compute the kinetic energy
         #self.ui.e0_spinbox.setValue(TTCF.inener.e0)
-        self.ui.density_spinbox.setValue(self.params.reduced_density)
+        self.ui.density_spinbox.setValue(self.md.reduced_density)
 
     def update_parameters(self):
         # Get the widget which sent this signal, as well as its new value
@@ -125,44 +119,39 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Now change the appropriate simulation parameter
         if sender == self.ui.lj_eps_spinbox:
-            self.params.eps = value
-            self.params.update_parameters(self.lmp)
+            self.md.eps = value
 
         if sender == self.ui.lj_sigma_spinbox:
-            self.params.sigma = value
-            self.params.update_parameters(self.lmp)
+            self.md.sigma = value
 
         elif sender == self.ui.field_spinbox:
-            self.params.flowrate = value
-            self.params.update_parameters(self.lmp)
+            self.md.flowrate = value
 
         # These spinboxes control initial parameters, and require the simulation to be restarted after
         # changing
         elif sender == self.ui.temp_spinbox:
-            self.params.temp = value
-            self.params.reset_and_update(self.lmp)
+            self.md.temp = value
 
         elif sender == self.ui.density_spinbox:
-            self.params.reduced_density = value
-            self.params.reset_and_update(self.lmp)
+            self.md.reduced_density = value
 
         else:
             print("Unknown sender")
             pass
         ## Finally, update the input values in the QTextBrowser widget
-        self.param_str = self.params.format_params()
+        self.param_str = self.md.format_params()
         self.ui.input_textbrowser.setPlainText(self.param_str)
         self.ui.input_textbrowser.repaint()
 
     def toggle_ne_field(self, state):
         # Toggles the nonequilibrium field (on or off) based on the status of nemd_checkbox
         if state == QtCore.Qt.Checked:
-            self.params.toggle_nemd(self.lmp)
+            self.md.toggle_nemd()
         else:
-            self.params.toggle_nemd(self.lmp)
+            self.md.toggle_nemd()
 
         ## Finally, update the input values in the QTextBrowser widget
-        self.param_str = self.params.format_params()
+        self.param_str = self.md.format_params()
         self.ui.input_textbrowser.setPlainText(self.param_str)
         self.ui.input_textbrowser.repaint()
 
@@ -170,33 +159,27 @@ class MainWindow(QtWidgets.QMainWindow):
     ################################# Plotting routines ################################
     def update_plot_data(self):
         # First, run an MD timestep
-        #self.lmp.command(f"run 1 pre no post no")
-        self.lmp.command(f"run 1")
-
-        # Get the current timestep
-        self.tau = self.lmp.extract_global("ntimestep")
+        self.md.run(1)
 
         # Only plot the fluid particles for now
-        x = coords[:,0]
-        y = coords[:,1]
-        self.pos_data.setData(x, y)  # Update the data.
+        self.pos_data.setData(self.md.x, self.md.y)  # Update the data.
 
         # Send a signal that we've moved forward a timestep. This is currently useless, but will get
         # used to synchronise other real-time plots
-        self.timestep_update.emit(self.tau)
+        #self.timestep_update.emit(self.tau)
 
         # Now do the g(2) radial-distribution function
-        g2_compute = self.lmp.numpy.extract_compute("g2", lammps.LMP_STYLE_GLOBAL, lammps.LMP_TYPE_ARRAY)
-        r = g2_compute[:,0]
-        g2 = g2_compute[:,1]
-        self.ui.g2_window.setXRange(0, max(r)+1)
-        self.ui.g2_window.setYRange(0, max(g2)+1)
+        g2_compute = self.md.g2_compute()
+        r = g2_compute['r']
+        g2 = g2_compute['g2']
+        #self.ui.g2_window.setXRange(0, max(r)+1)
+        #self.ui.g2_window.setYRange(0, max(g2)+1)
         self.g2_data.setData(r, g2)
 
     def update_GUI_elements(self):
         # Update the temperature and volume labels
-        temp = self.lmp.get_thermo("temp")
-        vol = self.lmp.get_thermo("vol")
+        temp = self.md.temp
+        vol = self.md.vol
         self.ui.temperature_label.setText(f"Temperature = {temp:.2f}")
         self.ui.volume_label.setText(f"Volume = {vol:.2f}")
 
@@ -221,7 +204,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.lj_sigma_spinbox.setEnabled(False)
         
         # Finally, run an MD timestep
-        self.lmp.command(f"run 1 ")
+        self.md.run(1)
         
     def pause_sim(self):
         """ Pause the simulation.
@@ -242,31 +225,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.gui_timer.stop()
         self.tau = 0
 
-        self.params.reset_and_update(self.lmp)
-
-        # Calculate thermodynamic variables
-        self.lmp.command("run 0")
-
-        # Only plot the fluid particles for now
-        coords = self.lmp.numpy.extract_atom("x")
-        x = coords[:,0]
-        y = coords[:,1]
-
-        # Fix the X and Y ranges so they don't constantly shift throughout the simulation
-        self.ui.plot_window.clear()
-        self.ui.plot_window.setXRange(0, self.lmp.get_thermo("lx"))
-        self.ui.plot_window.setYRange(0, self.lmp.get_thermo("ly"))
-
-        self.ui.plot_window.setBackground('w')
-        self.pos_data = self.ui.plot_window.plot(x, y, pen=None, symbol = 'o')
-
-        # Now do the g(2) radial-distribution function
-        g2_compute = self.lmp.numpy.extract_compute("g2", lammps.LMP_STYLE_GLOBAL, lammps.LMP_TYPE_ARRAY)
-        r = g2_compute[:,0]
-        g2 = g2_compute[:,1]
-        self.ui.g2_window.clear()
-        self.g2_data = self.ui.g2_window.plot(r, g2)
-
         # Re-enable buttons which can't be changed while the simulation is running
         self.ui.temp_spinbox.setEnabled(True)
         #self.ui.e0_spinbox.setEnabled(True)
@@ -275,6 +233,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.start_button.setEnabled(True)
         self.ui.lj_eps_spinbox.setEnabled(True)
         self.ui.lj_sigma_spinbox.setEnabled(True)
+        
+        self.ui.plot_window.clear()
+        self.ui.g2_window.clear()
 
         self.initialise_simulation()
 
@@ -297,7 +258,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gui_timer.stop()
         output_file, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File", "", "Input Files (*.in)")
         if output_file:
-            out_string = self.params.format_params()
+            out_string = self.md.format_params()
             with open(output_file, 'w') as ofp:
                 ofp.write(out_string)
 

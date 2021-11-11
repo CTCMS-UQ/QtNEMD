@@ -4,7 +4,7 @@ import sys
 import MainWindow
 
 
-VERSION_NUMBER=0.02
+VERSION_NUMBER=0.03
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

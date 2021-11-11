@@ -8,7 +8,7 @@ import lammps
 
 class MDInterface:
     def __init__(self):
-        # LAMMPS instance
+        # LAMMPS instance. Don't print output to the terminal
         lmp_args = ["-log", "none", "-screen", "none"]
         self._lmp = lammps.lammps(cmdargs=lmp_args)
 
@@ -30,13 +30,20 @@ class MDInterface:
         # LJ cutoff parameter. This is just to aid in plotting, probably don't want to change this
         self._rcut = 2.5
         
-        # Finally, initialise the thermodynamic output parameters to None until they are calculated
+        # Initialise the thermodynamic output parameters to None until they are calculated
         self._npart = None
         self._vol = None
+
+        self._box_bounds = (None, None, None)
 
         self._x = None
         self._y = None
         self._z = None
+
+        self._g2_arrays = None
+
+        # Finally, pass these values into the simulation
+        self.reset_and_update_parameters()
 
 ###################### Getters and setters (properties) #######################
 
@@ -47,28 +54,28 @@ class MDInterface:
     @xmax.setter
     def xmax(self, value):
         self._xmax = value
-        self.reset_and_update()
+        self.reset_and_update_parameters()
     @property
     def ymax(self):
         return(self._ymax)
     @ymax.setter
     def ymax(self, value):
         self._ymax = value
-        self.reset_and_update()
+        self.reset_and_update_parameters()
     @property
     def zmax(self):
         return(self._zmax)
     @zmax.setter
     def zmax(self, value):
         self._ymax = value
-        self.reset_and_update()
+        self.reset_and_update_parameters()
     @property
     def reduced_density(self):
         return(self._rho)
     @reduced_density.setter
     def reduced_density(self, value):
         self._rho=value
-        self.reset_and_update()
+        self.reset_and_update_parameters()
 
     # Lennard-Jones parameters. These do not require a restart when they change
     @property
@@ -96,7 +103,7 @@ class MDInterface:
         self.update_parameters()
     @property
     def temp(self):
-        return(self._temp)
+        return(self._lmp.get_thermo("temp"))
     @temp.setter
     def temp(self, value):
         self._temp = value
@@ -110,20 +117,39 @@ class MDInterface:
     # Atomic coordinates. These should be read-only to external classes
     @property
     def x(self):
-        return(self._x)
+        coords = self._lmp.numpy.extract_atom("x")
+        return(coords[:,0])
     @property
     def y(self):
-        return(self._y)
+        coords = self._lmp.numpy.extract_atom("x")
+        return(coords[:,1])
     @property
     def z(self):
-        return(self._z)
+        coords = self._lmp.numpy.extract_atom("x")
+        return(coords[:,2])
+    @property
+    def box_bounds(self):
+        return(self._box_bounds)
+    
+    @property
+    def npart(self):
+        return(self._lmp.get_natoms())
+    
+    @property
+    def vol(self):
+        return(self._lmp.get_thermo("vol"))
 
 ###################### Callable methods ###########################
     def setup(self):
-        self.reset_and_update(self._lmp)
+        # This function gets called at the start of the program's run, as well as whenever we restart the simulation.
+        self.reset_and_update_parameters()
         self._lmp.command("run 0")
 
         # Now update all of our thermodynamic parameters with values from LAMMPS
+        self.update_from_lammps()
+
+    def update_from_lammps(self):
+        # Update this class's parameters with the values from LAMMPS. This doesn't change the underlying simulation
         self._npart = self._lmp.get_natoms()
         self._temp = self._lmp.get_thermo("temp")
         self._vol = self._lmp.get_thermo("vol")
@@ -133,8 +159,16 @@ class MDInterface:
         self._x = coords[:,0]
         self._y = coords[:,1]
         self._z = coords[:,2]
+        self._box_bounds = (self._lmp.get_thermo("lx"), self._lmp.get_thermo("ly"), self._lmp.get_thermo("lz"))
 
-    def reset_and_update(self):
+        # Finally, grab the g(2) radial distribution function
+        self._g2_arrays = self._lmp.numpy.extract_compute("g2", lammps.LMP_STYLE_GLOBAL, lammps.LMP_TYPE_ARRAY)
+
+    # g(2) radial distribution function. This returns into two arrays for r and g(2)(r), indexed in a dict
+    def g2_compute(self):
+        return({'r': self._g2_arrays[:,0], 'g2': self._g2_arrays[:,1]})
+
+    def reset_and_update_parameters(self):
         # Reset the simulation and initialise the parameters
         self._lmp.command(f"clear")
 
@@ -246,3 +280,13 @@ class MDInterface:
 
 
         return(param_str)
+
+    def run(self, nsteps):
+        # First, advance the simulation
+        if(nsteps >= 0):
+            self._lmp.command(f"run {nsteps}")
+        else:
+            raise(ValueError)
+        
+        # Now update all of our thermodynamic parameters with values from LAMMPS
+        self.update_from_lammps()

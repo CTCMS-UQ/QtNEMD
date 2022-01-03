@@ -3,7 +3,8 @@ import pyqtgraph as pg
 import sys 
 import os
 import InputManager
-import LammpsDriver
+import FortranDriver
+import numpy as np
 
 sys.path.append("GUI-resources")
 from ui_mainwindow import Ui_MainWindow
@@ -20,9 +21,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        # Set the OMP_NUM_THREADS environment variable so LAMMPS doesn't complain
+        # Set the OMP_NUM_THREADS environment variable to 1 for the moment
+        # TODO: Do we need parallelism here?
         os.environ['OMP_NUM_THREADS'] = str(1)
-        self.md = LammpsDriver.MDInterface()
+        self.md = FortranDriver.MDInterface()
         # Timestep
         self.tau = 0
 
@@ -48,7 +50,6 @@ class MainWindow(QtWidgets.QMainWindow):
        
         # Add signals so spin-boxes change the underlying simulation parameters
         self.ui.lj_eps_spinbox.editingFinished.connect(self.update_parameters)
-        self.ui.lj_sigma_spinbox.editingFinished.connect(self.update_parameters)
         self.ui.field_spinbox.editingFinished.connect(self.update_parameters)
         #self.ui.e0_spinbox.editingFinished.connect(self.update_parameters)
         self.ui.temp_spinbox.editingFinished.connect(self.update_parameters)
@@ -90,8 +91,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Now do the g(2) radial-distribution function
         g2_compute = self.md.g2_compute()
-        r = g2_compute['r']
-        g2 = g2_compute['g2']
+        r = np.zeros(self.md.npart)
+        g2 = np.zeros(self.md.npart)
+        #r = g2_compute['r']
+        #g2 = g2_compute['g2']
         self.ui.g2_window.setXRange(0, max(r)+1)
         self.ui.g2_window.setYRange(0, max(g2)+1)
         self.ui.g2_window.setBackground('w')
@@ -105,8 +108,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Finally, set the simulation controls to the correct value
         self.ui.lj_eps_spinbox.setValue(self.md.eps)
-        self.ui.lj_sigma_spinbox.setValue(self.md.sigma)
-        self.ui.field_spinbox.setValue(self.md.flowrate)
+        self.ui.field_spinbox.setValue(self.md.fieldstrength)
         self.ui.temp_spinbox.setValue(self.md.temp)
         # Need to get LAMMPS to compute the kinetic energy
         #self.ui.e0_spinbox.setValue(TTCF.inener.e0)
@@ -119,13 +121,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Now change the appropriate simulation parameter
         if sender == self.ui.lj_eps_spinbox:
-            self.md.eps = value
-
-        if sender == self.ui.lj_sigma_spinbox:
-            self.md.sigma = value
+            self.md.kf = value
 
         elif sender == self.ui.field_spinbox:
-            self.md.flowrate = value
+            self.md.fieldstrength = value
 
         # These spinboxes control initial parameters, and require the simulation to be restarted after
         # changing
@@ -133,7 +132,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.md.temp = value
 
         elif sender == self.ui.density_spinbox:
-            self.md.reduced_density = value
+            self.md.trf = value
 
         else:
             print("Unknown sender")
@@ -169,12 +168,12 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.timestep_update.emit(self.tau)
 
         # Now do the g(2) radial-distribution function
-        g2_compute = self.md.g2_compute()
-        r = g2_compute['r']
-        g2 = g2_compute['g2']
+        #g2_compute = self.md.g2_compute()
+        #r = g2_compute['r']
+        #g2 = g2_compute['g2']
         #self.ui.g2_window.setXRange(0, max(r)+1)
         #self.ui.g2_window.setYRange(0, max(g2)+1)
-        self.g2_data.setData(r, g2)
+        #self.g2_data.setData(r, g2)
 
     def update_GUI_elements(self):
         # Update the temperature and volume labels
@@ -201,7 +200,6 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.ui.field_spinbox.setEnabled(False)
         self.ui.density_spinbox.setEnabled(False)
         self.ui.lj_eps_spinbox.setEnabled(False)
-        self.ui.lj_sigma_spinbox.setEnabled(False)
         
         # Finally, run an MD timestep
         self.md.run(1)
@@ -232,7 +230,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.density_spinbox.setEnabled(True)
         self.ui.start_button.setEnabled(True)
         self.ui.lj_eps_spinbox.setEnabled(True)
-        self.ui.lj_sigma_spinbox.setEnabled(True)
         
         self.ui.plot_window.clear()
         self.ui.g2_window.clear()

@@ -542,6 +542,13 @@ C
          TAUAV(I)=0.0D0
  101  CONTINUE
 
+C Turn on the field as appropriate
+      IF (IFLAG .EQ. 0) THEN
+        FIELD = 0.0D0
+      ELSE
+        FIELD = FE0
+      ENDIF
+
 C
 C CALCULATE PROPERTIES AT TIME ZERO
 C

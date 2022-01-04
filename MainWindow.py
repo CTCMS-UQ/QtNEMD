@@ -90,13 +90,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pos_data = self.ui.plot_window.plot(self.md.x, self.md.y, pen=None, symbol = 'o')
 
         # Now do the g(2) radial-distribution function
-        g2_compute = self.md.g2_compute()
-        r = g2_compute['r']
-        g2 = g2_compute['g2']
-        self.ui.g2_window.setXRange(0.1, max(r)+1)
-        self.ui.g2_window.setYRange(0.1, max(g2)+1)
-        self.ui.g2_window.setBackground('w')
-        self.g2_data = self.ui.g2_window.plot(r[1:], g2[1:], color='k')
+        rdf_compute = self.md.rdf_compute()
+        r = rdf_compute['r']
+        rdf = rdf_compute['rdf']
+        self.ui.rdf_window.setXRange(0, max(r)+1)
+        self.ui.rdf_window.setYRange(0, max(rdf)+1)
+        self.ui.rdf_window.setBackground('w')
+        self.rdf_data = self.ui.rdf_window.plot(r[1:], rdf[1:], color='k')
         
 
         # Initialise the N, V and T labels
@@ -131,10 +131,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.md.temp = value
 
         elif sender == self.ui.density_spinbox:
-            self.md.trf = value
-
-        #elif sender == self.ui.npart_spinbox:
-        #    self.md.npart = value
+            self.md.reduced_density = value
+            # The density is controlled by changing the box size and keeping NPART constant, so 
+            # we need to adjust the plot window's range
+            bounds = self.md.box_bounds
+            self.ui.plot_window.setXRange(0, bounds[0])
+            self.ui.plot_window.setYRange(0, bounds[1])
+            self.ui.volume_label.setText(f"Vol = {self.md.vol:.2f}")
 
         else:
             print("Unknown sender")
@@ -166,12 +169,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pos_data.setData(self.md.x, self.md.y)  # Update the data.
 
         # Now do the g(2) radial-distribution function
-        g2_compute = self.md.g2_compute()
-        r = g2_compute['r']
-        g2 = g2_compute['g2']
-        self.ui.g2_window.setXRange(0, max(r)+1)
-        self.ui.g2_window.setYRange(0, max(g2)+1)
-        self.g2_data.setData(r, g2)
+        rdf_compute = self.md.rdf_compute()
+        r = rdf_compute['r']
+        rdf = rdf_compute['rdf']
+        self.ui.rdf_window.setXRange(0, max(r)+1)
+        self.ui.rdf_window.setYRange(0, max(rdf)+1)
+        self.rdf_data.setData(r, rdf)
 
     def update_GUI_elements(self):
         # Update the temperature and volume labels
@@ -231,7 +234,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.lj_eps_spinbox.setEnabled(True)
         
         self.ui.plot_window.clear()
-        self.ui.g2_window.clear()
+        self.ui.rdf_window.clear()
 
         self.initialise_simulation()
 

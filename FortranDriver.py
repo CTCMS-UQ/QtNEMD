@@ -52,7 +52,7 @@ class MDInterface:
         self._y = None
         self._z = None
 
-        self._g2_arrays = None
+        self._rdf_arrays = None
 
         # Finally, pass these values into the simulation
         self.reset_and_update_parameters()
@@ -156,13 +156,13 @@ class MDInterface:
 
 
     # Radial distribution function. This returns into two arrays for r and g(2)(r), stored as a tuple
-    def g2_compute(self):
+    def rdf_compute(self):
 
-      # RDF already computed by Fortran backend during Force calculation
-      g2 = self.vol/(self.npart**2)*TTCF.averg.rij_hist
+      # RDF already computed by Fortran backend during Force calculation, just need to normalise it
+      rdf = self.vol/(self.npart**2)*TTCF.averg.rij_hist[np.nonzero(TTCF.averg.rij_hist)]
       # Now calculate the bin coordinates
-      r = np.array([i/TTCF.averg.rbin_inv for i in range(len(g2))])
-      return({'r': r, 'g2':g2})
+      r = np.array([i/TTCF.averg.rbin_inv for i in range(len(rdf))])
+      return({'r': r, 'rdf':rdf})
 
     def reset_and_update_parameters(self):
         # Reset the simulation and initialise the parameters

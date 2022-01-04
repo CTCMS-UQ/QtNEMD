@@ -4,7 +4,7 @@ C Parameters controlling floating point precision
       integer, parameter :: dp = selected_real_kind(15, 307)
       integer, parameter :: qp = selected_real_kind(33, 4931)
       INTEGER NP,NK,NPROP,NTCF,NL,NBINS,BINS,DIM
-      PARAMETER (NP=3000,NK=10000,NTCF=22,NPROP=11,NBINS=100)
+      PARAMETER (NP=3000,NK=10000,NTCF=22,NPROP=11,NBINS=150)
       PARAMETER (DIM=3)
       INTEGER NTYPE,IKOL,IMOL,LIMOL,NPART2,NLP,LATT
       REAL DPXY,DPXZ,DPYZ,DAL,DPB,DBETA,DF

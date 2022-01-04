@@ -262,7 +262,7 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;g&lt;span style=&quot; vertical-align:super;&quot;&gt;(2)&lt;/span&gt;(r) structure factor&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;g(r) radial distribution function&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -270,7 +270,7 @@
        </widget>
       </item>
       <item>
-       <widget class="PlotWidget" name="g2_window"/>
+       <widget class="PlotWidget" name="rdf_window"/>
       </item>
      </layout>
     </item>

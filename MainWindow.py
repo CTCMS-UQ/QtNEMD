@@ -54,6 +54,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.ui.e0_spinbox.editingFinished.connect(self.update_parameters)
         self.ui.temp_spinbox.editingFinished.connect(self.update_parameters)
         self.ui.density_spinbox.editingFinished.connect(self.update_parameters)
+        self.ui.npart_spinbox.editingFinished.connect(self.update_parameters)
 
         # Checkbox to toggle NEMD field
         self.ui.nemd_checkbox.stateChanged.connect(self.toggle_ne_field)
@@ -91,10 +92,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Now do the g(2) radial-distribution function
         g2_compute = self.md.g2_compute()
-        r = np.zeros(self.md.npart)
-        g2 = np.zeros(self.md.npart)
-        #r = g2_compute['r']
-        #g2 = g2_compute['g2']
+        r = g2_compute['r']
+        g2 = g2_compute['g2']
         self.ui.g2_window.setXRange(0, max(r)+1)
         self.ui.g2_window.setYRange(0, max(g2)+1)
         self.ui.g2_window.setBackground('w')
@@ -113,6 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Need to get LAMMPS to compute the kinetic energy
         #self.ui.e0_spinbox.setValue(TTCF.inener.e0)
         self.ui.density_spinbox.setValue(self.md.reduced_density)
+        self.ui.npart_spinbox.setValue(self.md.npart)
 
     def update_parameters(self):
         # Get the widget which sent this signal, as well as its new value
@@ -133,6 +133,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         elif sender == self.ui.density_spinbox:
             self.md.trf = value
+
+        elif sender == self.ui.npart_spinbox:
+            self.md.npart = value
 
         else:
             print("Unknown sender")
@@ -168,12 +171,12 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.timestep_update.emit(self.tau)
 
         # Now do the g(2) radial-distribution function
-        #g2_compute = self.md.g2_compute()
-        #r = g2_compute['r']
-        #g2 = g2_compute['g2']
-        #self.ui.g2_window.setXRange(0, max(r)+1)
-        #self.ui.g2_window.setYRange(0, max(g2)+1)
-        #self.g2_data.setData(r, g2)
+        g2_compute = self.md.g2_compute()
+        r = g2_compute['r']
+        g2 = g2_compute['g2']
+        self.ui.g2_window.setXRange(0, max(r)+1)
+        self.ui.g2_window.setYRange(0, max(g2)+1)
+        self.g2_data.setData(r, g2)
 
     def update_GUI_elements(self):
         # Update the temperature and volume labels

@@ -90,29 +90,6 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QRadioButton" name="twod_button">
-          <property name="text">
-           <string>2D</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-          <attribute name="buttonGroup">
-           <string notr="true">dimensionButtonGroup</string>
-          </attribute>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="threed_button">
-          <property name="text">
-           <string>3D (Colour = depth)</string>
-          </property>
-          <attribute name="buttonGroup">
-           <string notr="true">dimensionButtonGroup</string>
-          </attribute>
-         </widget>
-        </item>
        </layout>
       </item>
       <item>
@@ -208,7 +185,7 @@
         </item>
         <item>
          <layout class="QFormLayout" name="formLayout_2">
-          <item row="0" column="0">
+          <item row="1" column="0">
            <widget class="QDoubleSpinBox" name="density_spinbox">
             <property name="minimumSize">
              <size>
@@ -227,14 +204,14 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
+          <item row="1" column="1">
            <widget class="QLabel" name="density_label">
             <property name="text">
              <string>Fluid density</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="2" column="0">
            <widget class="QDoubleSpinBox" name="temp_spinbox">
             <property name="minimumSize">
              <size>
@@ -271,10 +248,39 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
+          <item row="2" column="1">
            <widget class="QLabel" name="tr_label">
             <property name="text">
              <string>Temperature</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QSpinBox" name="npart_spinbox">
+            <property name="minimumSize">
+             <size>
+              <width>146</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>146</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>2500</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="npart_label_2">
+            <property name="text">
+             <string>Num. Particles</string>
             </property>
            </widget>
           </item>

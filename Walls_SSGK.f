@@ -1462,12 +1462,6 @@ C
 C
   11  CONTINUE
 
-C Make sure we haven't overstuffed any of the cells. This conditional is 
-C outside the parallel region for performance reasons.
-      IF (NIC.GT.NA) THEN
-            WRITE(6,*)'TOO MANY PART. IN CELL'
-            WRITE(6,*)'NA,NIC,ICX,ICY,ICZ',NA,NIC,ICX,ICY,ICZ
-      ENDIF
 C      IF (NIC.GT.NA) STOP
 
 C

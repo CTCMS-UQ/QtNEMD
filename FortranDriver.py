@@ -5,12 +5,13 @@
     overridden to support, e.g. LAMMPS or Debra's MD code."""
 
 import TTCF
+import numpy as np
 
 class MDInterface:
     def __init__(self):
         self._tr     = 1.0
         self._drw    = 1.0
-        self._drf    = 0.5
+        self._drf    = 1.0
         self._delta  = 5.0E-003
         self._latt   = 1
         self._npart  = 500
@@ -115,13 +116,13 @@ class MDInterface:
     # Atomic coordinates. These should be read-only to external classes
     @property
     def x(self):
-        return(TTCF.coord.x)
+        return(TTCF.coord.x[:self._npart])
     @property
     def y(self):
-        return(TTCF.coord.y)
+        return(TTCF.coord.y[:self._npart])
     @property
     def z(self):
-        return(TTCF.coord.z)
+        return(TTCF.coord.z[:self._npart])
     @property
     def box_bounds(self):
         return(self._box_bounds)
@@ -145,18 +146,17 @@ class MDInterface:
         self._temp = TTCF.averg.temp
         self._vol = TTCF.nopart.npart / TTCF.parm.drf
         # And particle positions
-        self._x = TTCF.coord.x
-        self._y = TTCF.coord.y
-        self._z = TTCF.coord.z
+        self._x = TTCF.coord.x[:self._npart]
+        self._y = TTCF.coord.y[:self._npart]
+        self._z = TTCF.coord.z[:self._npart]
         self._box_bounds = (TTCF.parm.cubex, TTCF.parm.cubey, TTCF.parm.cubez)
 
-        # Finally, grab the g(2) radial distribution function
-        #self._g2_arrays = self._lmp.numpy.extract_compute("g2", lammps.LMP_STYLE_GLOBAL, lammps.LMP_TYPE_ARRAY)
 
-    # g(2) radial distribution function. This returns into two arrays for r and g(2)(r), indexed in a dict
+    # g(2) radial distribution function. This returns into two arrays for r and g(2)(r), stored as a tuple
     def g2_compute(self):
-      # TODO
-      pass
+      r = np.sqrt(self._x**2 + self._y**2 + self._z**2)
+      g2 = np.histogram(r, bins=50, density=True)
+      return({'r': g2[1][1:], 'g2':g2[0]})
 
     def reset_and_update_parameters(self):
         # Reset the simulation and initialise the parameters

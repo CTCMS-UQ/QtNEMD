@@ -166,7 +166,7 @@ C
 C***** ZERO ARRAYS
 C
       DO I = 0, NK
-          DO J= 0, BINSX
+          DO J= 0, NBINS
             DENSAV1(I,J) = 0.0D0
             DENSAV2(I,J) = 0.0D0
               DO K = 1, NTCF
@@ -224,7 +224,7 @@ C***** CALCULATE LENGTHS BASED ON YZDIVX RATIO
       CUBEY2 = CUBEY/2.0D0                                     
       CUBEZ2 = CUBEZ/2.0D0
       BINS = FLOOR(CUBEX)
-      TAUBINSX = FLOOR(CUBEX)
+      TAUNBINS = FLOOR(CUBEX)
 C
 C****** IF RCUT TOO LARGE RESET TO HALF BOXLENGTH
 C      MIX applies mixing rules  based on EPS1 and EPS2 

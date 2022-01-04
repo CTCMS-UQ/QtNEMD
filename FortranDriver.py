@@ -138,6 +138,9 @@ class MDInterface:
         TTCF.setup()
         TTCF.md(1,0)
 
+        # Zero array for g(2) RDF
+        self.delta_r = np.zeros([self.npart, self.npart])
+
         # Now update all of our thermodynamic parameters with values from LAMMPS
         self.get_params_from_TTCF()
 
@@ -152,11 +155,14 @@ class MDInterface:
         self._box_bounds = (TTCF.parm.cubex, TTCF.parm.cubey, TTCF.parm.cubez)
 
 
-    # g(2) radial distribution function. This returns into two arrays for r and g(2)(r), stored as a tuple
+    # Radial distribution function. This returns into two arrays for r and g(2)(r), stored as a tuple
     def g2_compute(self):
-      r = np.sqrt(self._x**2 + self._y**2 + self._z**2)
-      g2 = np.histogram(r, bins=50, density=True)
-      return({'r': g2[1][1:], 'g2':g2[0]})
+
+      # RDF already computed by Fortran backend during Force calculation
+      g2 = self.vol/(self.npart**2)*TTCF.averg.rij_hist
+      # Now calculate the bin coordinates
+      r = np.array([i/TTCF.averg.rbin_inv for i in range(len(g2))])
+      return({'r': r, 'g2':g2})
 
     def reset_and_update_parameters(self):
         # Reset the simulation and initialise the parameters
@@ -263,6 +269,45 @@ DXXDIV
 NTYPE,NON,NGAUS,E0
 NPLOT,MAXTAU,EQTIM,NCYC"""
         return(param_str)
+    def read_from_file(self, input_file):
+        # Read the input file line by line and assign to internal variables
+        with open(input_file, "r") as ifp:
+            # Manually iterate through the data, since each line needs to go into a different set of 
+            # variables
+            data = next(ifp).split()
+            tr,drw,drf,delta,latt,npart,nlp = data
+
+            data = next(ifp).split()
+            fe0,rcut,nlayer,kh,nprint = data
+
+            data = next(ifp).split()
+            mix, eps1, eps2, qvol = data
+
+            data = next(ifp).split()
+            kf,r0,limol,xydivz = data
+
+            dxxdiv = float(next(ifp))
+
+            data = next(ifp).split()
+            ntype,non,ngaus,e0 = data
+
+            data = next(ifp).split()
+            nplot,maxtau,eqtim,ncyc = data
+
+        
+        # now cast the data we read from the file into the proper numpy types
+        self._tr, self._drw, self._drf, self._delta = np.array([tr, drw, drf, delta]).astype(np.double)
+        self._latt, self._npart = np.array([latt, npart]).astype(np.int)
+        self._fe0, self._rcut, self._kh = np.array([fe0, rcut, kh]).astype(np.double)
+        self._nprint = np.int(nprint)
+        self._mix, self._eps1, self._eps2, self._qvol = np.array([mix, eps1, eps2, qvol]).astype(np.double)
+
+        self._kf, self._r0, self._limol, self._xydivz = np.array([kf,r0,limol,xydivz]).astype(np.double)
+        self._dxxdiv = np.double(dxxdiv)
+        self._ntype, self._non, self._ngaus = np.array([ntype,non,ngaus]).astype(np.int)
+        self._e0 = np.double(e0)
+        self._nplot, self._maxtau, self._eqtim, self._ncyc = np.array([nplot,maxtau,eqtim,ncyc]).astype(np.int)
+        self.reset_and_update_parameters()
 
     def run(self, nsteps):
         # First, advance the simulation

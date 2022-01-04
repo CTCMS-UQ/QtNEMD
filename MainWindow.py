@@ -54,7 +54,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.ui.e0_spinbox.editingFinished.connect(self.update_parameters)
         self.ui.temp_spinbox.editingFinished.connect(self.update_parameters)
         self.ui.density_spinbox.editingFinished.connect(self.update_parameters)
-        self.ui.npart_spinbox.editingFinished.connect(self.update_parameters)
+        #self.ui.npart_spinbox.editingFinished.connect(self.update_parameters)
 
         # Checkbox to toggle NEMD field
         self.ui.nemd_checkbox.stateChanged.connect(self.toggle_ne_field)
@@ -73,7 +73,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # Now connect the file editing dialog to our open and close menu buttons
         self.ui.open_input_file.triggered.connect(self.open_input_file)
         self.ui.save_input_file.triggered.connect(self.save_to_file)
-        self.ui.plot_action.triggered.connect(self.open_new_plot)
         self.ui.actionQuit.triggered.connect(self.clean_exit)
         finish = QtWidgets.QAction("Quit", self)
         finish.triggered.connect(self.closeEvent)
@@ -94,10 +93,10 @@ class MainWindow(QtWidgets.QMainWindow):
         g2_compute = self.md.g2_compute()
         r = g2_compute['r']
         g2 = g2_compute['g2']
-        self.ui.g2_window.setXRange(0, max(r)+1)
-        self.ui.g2_window.setYRange(0, max(g2)+1)
+        self.ui.g2_window.setXRange(0.1, max(r)+1)
+        self.ui.g2_window.setYRange(0.1, max(g2)+1)
         self.ui.g2_window.setBackground('w')
-        self.g2_data = self.ui.g2_window.plot(r, g2, color='k')
+        self.g2_data = self.ui.g2_window.plot(r[1:], g2[1:], color='k')
         
 
         # Initialise the N, V and T labels
@@ -112,7 +111,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Need to get LAMMPS to compute the kinetic energy
         #self.ui.e0_spinbox.setValue(TTCF.inener.e0)
         self.ui.density_spinbox.setValue(self.md.reduced_density)
-        self.ui.npart_spinbox.setValue(self.md.npart)
+        #self.ui.npart_spinbox.setValue(self.md.npart)
 
     def update_parameters(self):
         # Get the widget which sent this signal, as well as its new value
@@ -134,8 +133,8 @@ class MainWindow(QtWidgets.QMainWindow):
         elif sender == self.ui.density_spinbox:
             self.md.trf = value
 
-        elif sender == self.ui.npart_spinbox:
-            self.md.npart = value
+        #elif sender == self.ui.npart_spinbox:
+        #    self.md.npart = value
 
         else:
             print("Unknown sender")
@@ -166,10 +165,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # Only plot the fluid particles for now
         self.pos_data.setData(self.md.x, self.md.y)  # Update the data.
 
-        # Send a signal that we've moved forward a timestep. This is currently useless, but will get
-        # used to synchronise other real-time plots
-        #self.timestep_update.emit(self.tau)
-
         # Now do the g(2) radial-distribution function
         g2_compute = self.md.g2_compute()
         r = g2_compute['r']
@@ -184,6 +179,7 @@ class MainWindow(QtWidgets.QMainWindow):
         vol = self.md.vol
         self.ui.temperature_label.setText(f"Temperature = {temp:.2f}")
         self.ui.volume_label.setText(f"Volume = {vol:.2f}")
+        self.ui.npart_label.setText(f"N particles = {self.md.npart}")
 
     def start_sim(self):
         """ Start the simulation.
@@ -241,17 +237,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     ######################### I/O Control routines ####################################
     def open_input_file(self):
-        pass
-        #self.sim_timer.stop()
-        #input_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", "", "Input Files (*.in)")
-        #if input_file:
-        #    self.params.read_from_file(input_file)
-        #    # Update the input values in the QTextBrowser widget
-        #    self.param_str = self.params.format_params()
-        #    self.ui.input_textbrowser.setPlainText(self.param_str)
-        #    self.ui.input_textbrowser.repaint()
-        #    self.restart_sim()
-        #    self.initialise_simulation()
+        self.sim_timer.stop()
+        input_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", "", "Input Files (*.in)")
+        if input_file:
+            self.md.read_from_file(input_file)
+            # Update the input values in the QTextBrowser widget
+            self.param_str = self.params.format_params()
+            self.ui.input_textbrowser.setPlainText(self.param_str)
+            self.ui.input_textbrowser.repaint()
+            self.restart_sim()
             
     def save_to_file(self):
         self.sim_timer.stop()
@@ -261,15 +255,6 @@ class MainWindow(QtWidgets.QMainWindow):
             out_string = self.md.format_params()
             with open(output_file, 'w') as ofp:
                 ofp.write(out_string)
-
-    def open_new_plot(self):
-        pass
-        #new_plot = PlotManager.PlotManager()
-        #new_plot.show()
-        #self.window_list.append(new_plot)
-
-        ## Now connect signals so the main window can communicate with the floating plot widget
-        #self.timestep_update.connect(new_plot.update)
 
     ############################# Clean exit ################################
     def clean_exit(self):

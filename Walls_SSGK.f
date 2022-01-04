@@ -194,7 +194,7 @@ C
 C***** ZERO ARRAYS
 C
       DO I = 0, NK
-          DO J= 0, BINSX
+          DO J= 0, NBINS
             DENSAV1(I,J) = 0.0D0
             DENSAV2(I,J) = 0.0D0
               DO K = 1, NTCF
@@ -251,7 +251,7 @@ C***** CALCULATE LENGTHS BASED ON YZDIVX RATIO
       CUBEY2 = CUBEY/2.0D0                                     
       CUBEZ2 = CUBEZ/2.0D0
       BINS = FLOOR(CUBEX)
-      TAUBINSX = FLOOR(CUBEX)
+      TAUNBINS = FLOOR(CUBEX)
 C
 C****** IF RCUT TOO LARGE RESET TO HALF BOXLENGTH
 C      MIX applies mixing rules  based on EPS1 and EPS2 
@@ -553,7 +553,7 @@ C
       E00=UPOT+KE2/2.0D0
       KENER = KE2/2.0D0
 
-C       DO I=0,TAUBINSX 
+C       DO I=0,TAUNBINS 
 C         TAUDENS1(I) = 0.0D0
 C         TAUDENS2(I) = 0.0D0
 C       ENDDO 
@@ -563,41 +563,6 @@ C
       KTRAN = 0.0D0
       KENER = 0.0D0
       KENERW = 0.0D0
-      PX3 = 0.0D0
-      VX = 0.0D0
-      VY=0.0D0
-      VZ=0.0D0
-      VXL = 0.0D0
-      VYL=0.0D0
-      VZL=0.0D0
-      JX = 0.0D0
-      JY=0.0D0
-      JZ=0.0D0
-      JXL = 0.0D0
-      JYL=0.0D0
-      JZL=0.0D0
-      VVX=0.0D0
-      VVY=0.0D0
-      VVZ=0.0D0
-      VVXL=0.0D0
-      VVYL=0.0D0
-      VVZL=0.0D0
-      VVXLL=0.0D0
-      VVYLL=0.0D0
-      VVZLL=0.0D0
-      XR=0.0D0
-      YR=0.0D0
-      ZR=0.0D0
-      MSDX =0.0D0
-      MSDY = 0.0D0
-      MSDZ = 0.0D0
-      MSDXL = 0.0D0
-      MSDYL = 0.0D0
-      MSDZL = 0.0D0 
-      DISS=0.0D0
-      NINBIN = 0.0D0
-      NINBINL = 0.0D0
-      NINBIN0L = 0.0D0  
 
       DO 81 I = 1, NPART
             S0L(I) = 0.0D0
@@ -615,38 +580,6 @@ C
 
             PX3 = PX3+PX(I)**3
 
-            VX= VX + PX(I)
-            VY= VY + PY(I)
-            VZ= VZ + PZ(I)
-
-            VXL= VXL + PX(I)*SL(I)
-            VYL= VYL + PY(I)*SL(I)
-            VZL= VZL + PZ(I)*SL(I)
-
-            JX = JX + IKOL(I)*PX(I)
-            JY = JY + IKOL(I)*PY(I) 
-            JZ = JZ + IKOL(I)*PZ(I)
-
-            JXL = JXL + SL(I)*IKOL(I)*PX(I)
-            JYL = JYL + SL(I)*IKOL(I)*PY(I)
-            JZL = JZL + SL(I)*IKOL(I)*PZ(I)
-
-            VVX=VVX+PX(I)*T0V(I,1)
-            VVY=VVY+PY(I)*T0V(I,2)
-            VVZ=VVZ+PZ(I)*T0V(I,3)
-
-            VVXL=VVXL+PX(I)*T0V(I,1)*SL(I)
-            VVYL=VVYL+PY(I)*T0V(I,2)*SL(I)
-            VVZL=VVZL+PZ(I)*T0V(I,3)*SL(I)
-
-            VVXLL=VVXLL+PX(I)*T0V(I,1)*S0L(I)*SL(I)
-            VVYLL=VVYLL+PY(I)*T0V(I,2)*S0L(I)*SL(I)
-            VVZLL=VVZLL+PZ(I)*T0V(I,3)*S0L(I)*SL(I)
-
-            NINBIN = NINBIN + SL(I)*1
-            NINBINL = NINBINL + SL(I)*S0L(I)*1
-            NINBIN0L = NINBIN0L + S0L(I)*1 
-
             X0(I) = X(I)
             Y0(I) = Y(I)
             Z0(I) = Z(I)
@@ -656,35 +589,10 @@ C
          TEMP  = KENER/(DF/2.0D0)
          TOTE  = KENER + UPOT
          TOTE  = TOTE/NPART
-         PXY   = 0.5D0*(PT(1,2)+PT(2,1))
-         PXZ   = 0.5D0*(PT(1,3)+PT(3,1))
-         PYZ   = 0.5D0*(PT(2,3)+PT(3,2))
-         PXYF   = 0.5D0*(PTF(1,2)+PTF(2,1))
-         PXZF   = 0.5D0*(PTF(1,3)+PTF(3,1))
-         PYZF   = 0.5D0*(PTF(2,3)+PTF(3,2))
-         PP    = 0.5D0*(PT(1,1)+PT(2,2)+PT(3,3))/3
-         PPF   = 0.5D0*(PTF(1,1)+PTF(2,2)+PTF(3,3))/3
-         DISS = DISS + (JX*FIELD)*TR
 C          DO I=0, BINS
 C             DISS0L(I) = DISS0L(I) + (JXL(I)*FIELD)*TR
 C          ENDDO 
 
-C***** ACCUMULATE PROPERTIES IN MEAN
-C***** UP TO NPROP PROPERTIES CAN BE CALCULATED
-C
-         NMEAN   = NMEAN +1
-         MEAN(1) = MEAN(1) + JX/DBLE(NPART)
-         MEAN(2) = MEAN(2) + JY/DBLE(NPART)
-         MEAN(3) = MEAN(3) + JZ/DBLE(NPART)
-         MEAN(4) = MEAN(4) + TEMP
-         MEAN(5) = MEAN(5) + ALPH
-         MEAN(6) = MEAN(6) + TOTE
-         MEAN(7) = MEAN(7) + UPOT/NPART
-         MEAN(8) = MEAN(8) + PXZF
-         MEAN(9) = MEAN(9) + PT(1,1) - PT(2,2)
-         MEAN(10)= MEAN(10)+ DISS
-         MEAN(11) = MEAN(11) + JX/DBLE(NPART)
-C
 
       DO ISTEP=1,KPROP
          KE2=0.0D0
@@ -750,68 +658,15 @@ C***** KINETIC PART OF AVERAGES
                   SL(I) = 1.0D0
               ENDIF 
 
-             PX3 = PX3+PX(I)**3
-
-             VX= VX + PX(I)
-             VY= VY + PY(I)
-             VZ= VZ + PZ(I)
-
-             VXL= VXL + PX(I)*SL(I)
-             VYL= VYL + PY(I)*SL(I)
-             VZL= VZL + PZ(I)*SL(I)
-
-             JX = JX + IKOL(I)*PX(I)
-             JY = JY + IKOL(I)*PY(I) 
-             JZ = JZ + IKOL(I)*PZ(I)
-
-             JXL = JXL + SL(I)*IKOL(I)*PX(I)
-             JYL = JYL + SL(I)*IKOL(I)*PY(I)
-             JZL = JZL + SL(I)*IKOL(I)*PZ(I)
-
-             VVX=VVX+PX(I)*T0V(I,1)
-             VVY=VVY+PY(I)*T0V(I,2)
-             VVZ=VVZ+PZ(I)*T0V(I,3)
-
-             VVXL=VVXL+PX(I)*T0V(I,1)*SL(I)
-             VVYL=VVYL+PY(I)*T0V(I,2)*SL(I)
-             VVZL=VVZL+PZ(I)*T0V(I,3)*SL(I)
-
-             VVXLL=VVXLL+PX(I)*T0V(I,1)*S0L(I)*SL(I)
-             VVYLL=VVYLL+PY(I)*T0V(I,2)*S0L(I)*SL(I)
-             VVZLL=VVZLL+PZ(I)*T0V(I,3)*S0L(I)*SL(I)
-
-             XR(I) = XR(I)+X(I)-X0(I) - ANINT((X(I)-X0(I))/CUBEX)*CUBEX
-             YR(I) = YR(I)+Y(I)-Y0(I) - ANINT((Y(I)-Y0(I))/CUBEY)*CUBEY
-             ZR(I) = ZR(I)+Z(I)-Z0(I) - ANINT((Z(I)-Z0(I))/CUBEZ)*CUBEZ
-
-             MSDX = MSDX + (XR(I))**2
-             MSDY = MSDY + (YR(I))**2
-             MSDZ = MSDZ + (ZR(I))**2 
-
-             MSDXL  = MSDXL + SL(I)*S0L(I)*(XR(I))**2
-             MSDYL  = MSDYL + SL(I)*S0L(I)*(YR(I))**2
-             MSDZL  = MSDZL + SL(I)*S0L(I)*(ZR(I))**2
-
-             NINBIN = NINBIN + SL(I)*1
-             NINBINL = NINBINL + S0L(I)*SL(I)*1
-
              X0(I) = X(I)
              Y0(I) = Y(I)
              Z0(I) = Z(I)
  1          CONTINUE
 
-             DO I=0,TAUBINSX 
+             DO I=0,TAUNBINS 
              TAUDENS1(I) = TAUDENS1(I)/(KPROP*CUBEZ*CUBEY)
              TAUDENS2(I) = TAUDENS2(I)/(KPROP*CUBEZ*CUBEY)
              ENDDO
-
-
-C***** WRITE DISSIPATION FUNCTION
-
-         IF (ISTEP.EQ.MAXTAU.AND.IFLAG.EQ.1) THEN
-           DISSFN = (TAUAV(12)- (T0(1)/(2*MAXTAU))
-     &                 - (DISS/(2*MAXTAU)))
-         ENDIF
 C********** ISTEP
       END DO
 C
@@ -1335,6 +1190,7 @@ C
       INTEGER, ALLOCATABLE, DIMENSION(:,:,:,:) :: ICELL
       INTEGER JCX,JCY,JCZ,JJCX,JJCY,JJCZ
       INTEGER I1,I2
+      INTEGER IBIN
       REAL (KIND=sp) RX,RY,RZ,CIS,RSQ,R02,RSI,R4,R6,R12,RSCALAR,EW
       REAL (KIND=sp) FIJX,FIJY,FIJZ,ANUM,ADEN,ANUMB,ADENB
       REAL (KIND=sp) PXPY,PXPZ,PYPZ
@@ -1346,36 +1202,14 @@ C
 C
 C***** ZERO ARRAYS
 C
-      DO 1 I = 1, NPART
-         FX(I) = 0.0D0
-         FY(I) = 0.0D0
-         FZ(I) = 0.0D0
-    1 CONTINUE
-C
-C      IF(DO_PRESSURE.EQV..TRUE.) THEN
-C            PT(1,1) = 0.0D0
-C            PT(1,2) = 0.0D0
-C            PT(1,3) = 0.0D0
-C            PT(2,1) = 0.0D0
-C            PT(2,2) = 0.0D0
-C            PT(2,3) = 0.0D0
-C            PT(3,1) = 0.0D0
-C            PT(3,2) = 0.0D0
-C            PT(3,3) = 0.0D0
-C            PTF(1,1) = 0.0D0
-C            PTF(1,2) = 0.0D0
-C            PTF(1,3) = 0.0D0
-C            PTF(2,1) = 0.0D0
-C            PTF(2,2) = 0.0D0
-C            PTF(2,3) = 0.0D0
-C            PTF(3,1) = 0.0D0
-C            PTF(3,2) = 0.0D0
-C            PTF(3,3) = 0.0D0 
-C            UPOT    = 0.0D0
-C            UWALL   = 0.0D0
-C            UCL     = 0.0D0
-C      ENDIF
-C
+      FX = 0.0D0
+      FY = 0.0D0
+      FZ = 0.0D0
+      RIJ_HIST = 0.D0
+
+C***** This is the number to sort the particle pairs' radial separations into the correct histogram bins
+      RBIN_INV = 1.D0 / (RMAX/REAL(NBINS))
+
 C***** DEFINE USEFUL TERMS
 C
       R02 = R0**2
@@ -1393,7 +1227,7 @@ C
         NCELLY     = INT(CUBEY/RCUT)
         NCELLZ     = INT(CUBEZ/RCUT)
         ROUT2      = RMAX
-      ENDIF
+      ENDIF 
 
 C
 C      IF (NCELLX.LT.3) STOP 'Do not use cell code, NCELLX<3'
@@ -1470,11 +1304,11 @@ C
 C$OMP  PARALLEL DO COLLAPSE(3) DEFAULT(NONE) SCHEDULE(STATIC)
 C$OMP& SHARED(NCELLX, NCELLY, NCELLZ, NUMCELL, ICELL, X, Y, Z, ROUT2,
 C$OMP&        CUBEX, CUBEY, CUBEZ, RMAX, IMOL, EPS1, EPS2, MIX, SHIFT,
-C$OMP&        NGAUS, S1, S2)
+C$OMP&        NGAUS, S1, S2, RBIN_INV)
 C$OMP& PRIVATE(JCX, JCY, JCZ, JJCX, I1, I2, I, J, RX, RY, RZ, 
 C$OMP&         RX2, RY2, RZ2, RSQ, EPS12, R4, R6, R12, RSCALAR, RSI,
-C$OMP&         NIC, NJC, FIJX, FIJY, FIJZ)
-C$OMP& REDUCTION(+:UPOT, FX, FY, FZ) 
+C$OMP&         NIC, NJC, FIJX, FIJY, FIJZ, IBIN)
+C$OMP& REDUCTION(+:UPOT, FX, FY, FZ, RIJ_HIST)
       DO 22 ICX = 1,NCELLX
       DO 22 ICY = 1,NCELLY
       DO 22 ICZ = 1,NCELLZ
@@ -1536,6 +1370,7 @@ C
          IF (RZ2.GT.ROUT2) GOTO 61
 
          RSQ = RX2 + RY2 + RZ2
+
 C
 C***** FIJ = FORCECELL ON I DUE TO J
 C***** CALCULATE FORCECELLS.24 AND POTENTIAL ENERGY WITH LJ POTENTIAL
@@ -1544,6 +1379,14 @@ C******CALCULATE INTERMOLECULAR FORECES
 
         IF (RSQ.GT.RMAX) GO TO 61
 
+C***** Add the particle separation to the histogram before we do anything else
+C      This saves a lot of time later on
+        IBIN = INT(SQRT(RSQ)*RBIN_INV)
+        IF (IBIN < NBINS) THEN
+          RIJ_HIST(IBIN) = RIJ_HIST(IBIN) + 1
+        ENDIF
+
+C***** Force calculation starts here
         IF (IMOL(I).EQ.IMOL(J)) THEN 
           EPS12 = 1  
         ELSE 
@@ -1566,30 +1409,7 @@ C******CALCULATE INTERMOLECULAR FORECES
          FX(J)  = FX(J) - FIJX
          FY(J)  = FY(J) - FIJY
          FZ(J)  = FZ(J) - FIJZ
-C       
-C***** COMPUTE CONFIGURATIONAL PART OF PRESSURE TENSOR/12
-C
-C         IF (DO_PRESSURE.EQV..TRUE.) THEN
-C            PT(1,1) = PT(1,1) + RX*FIJX
-C            PT(1,2) = PT(1,2) + RX*FIJY
-C            PT(1,3) = PT(1,3) + RX*FIJZ  
-C            PT(2,1) = PT(2,1) + RY*FIJX
-C            PT(2,2) = PT(2,2) + RY*FIJY
-C            PT(2,3) = PT(2,3) + RY*FIJZ
-C            PT(3,1) = PT(3,1) + RZ*FIJX
-C            PT(3,2) = PT(3,2) + RZ*FIJY
-C            PT(3,3) = PT(3,3) + RZ*FIJZ
-C            PTF(1,1) = PTF(1,1) + (S2(I)+S2(J))/2.0D0*RX*FIJX
-C            PTF(1,2) = PTF(1,2) + (S2(I)+S2(J))/2.0D0*RX*FIJY
-C            PTF(1,3) = PTF(1,3) + (S2(I)+S2(J))/2.0D0*RX*FIJZ
-C            PTF(2,1) = PTF(2,1) + (S2(I)+S2(J))/2.0D0*RY*FIJX
-C            PTF(2,2) = PTF(2,2) + (S2(I)+S2(J))/2.0D0*RY*FIJY
-C            PTF(2,3) = PTF(2,3) + (S2(I)+S2(J))/2.0D0*RY*FIJZ
-C            PTF(3,1) = PTF(3,1) + (S2(I)+S2(J))/2.0D0*RZ*FIJX
-C            PTF(3,2) = PTF(3,2) + (S2(I)+S2(J))/2.0D0*RZ*FIJY
-C            PTF(3,3) = PTF(3,3) + (S2(I)+S2(J))/2.0D0*RZ*FIJZ
-C         ENDIF
-C
+
  61   CONTINUE
   3   CONTINUE
  21   CONTINUE

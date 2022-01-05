@@ -102,7 +102,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Initialise the N, V and T labels
         self.ui.npart_label.setText(f"N particles = {self.md.npart}")
         self.ui.volume_label.setText(f"Vol = {self.md.vol:.2f}")
-        self.ui.temperature_label.setText(f"Temperature = {self.md.temp}")
+        self.ui.temperature_label.setText(f"Temperature = {self.md.temp:.2f}")
 
         # Finally, set the simulation controls to the correct value
         self.ui.lj_eps_spinbox.setValue(self.md.eps)
@@ -245,7 +245,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if input_file:
             self.md.read_from_file(input_file)
             # Update the input values in the QTextBrowser widget
-            self.param_str = self.params.format_params()
+            self.param_str = self.md.format_params()
             self.ui.input_textbrowser.setPlainText(self.param_str)
             self.ui.input_textbrowser.repaint()
             self.restart_sim()

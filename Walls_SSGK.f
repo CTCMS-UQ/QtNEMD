@@ -32,9 +32,12 @@ C   AVER(I,0..NTCF)
 C
 C-----------------------------------------------------------------------
 C
-      PROGRAM Steady_State_Green_Kubo 
+C      MODULE TTCF 
 
-      USE OMP_LIB
+C      CONTAINS 
+      
+      SUBROUTINE SETUP()
+
       INCLUDE "SSGK.inc"
 
 C
@@ -45,13 +48,14 @@ C
       REAL (KIND=sp) AR2PX,AR2PY,AR2PZ,TESTL,TESTH
       REAL (KIND=sp) KENER
       INTEGER I,J,K,M,N,IXX
+      INTEGER RANK, NUM_PROCESSORS, IERR
       CHARACTER*9 DATNOW
-      CHARACTER*256 FILENAME
       REAL (KIND=sp) TIMNOW,SECNDS,RZERO
+
 C
 C***** DISPLAY TITLE
 C
-      WRITE(6,'(//''NEMD WITH COLOUR: RK4,LJ'')')
+C      WRITE(6,'(//''NEMD WITH COLOUR: RK4,LJ'')')
 C      CALL DATE(DATNOW)
       RZERO=0.0E0
 C      TIMNOW=SECNDS(RZERO)
@@ -69,34 +73,18 @@ C      WRITE(6,*) DATNOW,TIMNOW
       AR2PY=0.0D0
       AR2PZ=0.0D0
 
-      DO_PRESSURE = .FALSE.
-
-C
-C***** READ INPUT DATA
-C
-      CALL getarg(1,FILENAME)
-      OPEN(UNIT=16,FILE='Pres',STATUS='UNKNOWN',FORM='FORMATTED') 
-      OPEN(UNIT=1,FORM='FORMATTED',STATUS='OLD',
-     &     ACCESS='SEQUENTIAL',FILE=FILENAME)
-      REWIND 1
-      READ(1,*) TR,DRW,DRF,DELTA,LATT,NPART,NLP
-      READ(1,*) FE0,RCUT,NLAYER,KH,NPRINT
-      READ(1,*) MIX,EPS1,EPS2,QVOL
-      READ(1,*) KF,R0,LIMOL,YZDIVX
-      READ(1,*) DXXDIV
-      WRITE(6,*) DXXDIV, TR, FE0, MIX, KF
-      READ(1,*) NTYPE,NON,NGAUS,E0
-      READ(1,*) NPLOT,MAXTAU,EQTIM,NCYC
-      REWIND 1
       FIELD=0.0D0
+
+      DO_PRESSURE = .FALSE.
 C
 C***** ANALYSE INPUT
 C
        IF (MAXTAU.GT.NK) THEN
           WRITE(6,*)'MAXTAU TOO HIGH FOR DIMENSION:',NK
-C          STOP
+          STOP
        END IF
        IF (NTYPE.LT.1.OR.NTYPE.GT.3) THEN
+          WRITE(*,*) NTYPE
           WRITE(6,*)'NO SUCH NTYPE IN THIS PROGRAM, CHOOSE:1,2,3'
           STOP
        END IF
@@ -114,7 +102,7 @@ C
               IF (ANINT(TEST).LT.TESTL.OR.ANINT(TEST).GT.TESTH) THEN
                  WRITE(6,*)'NPART MUST BE 4*N^3/YZDIVX; N INTEGER'
                  WRITE(6,*)TESTL,TESTH
-C                 STOP
+                 STOP
               ENDIF
             ENDIF
         ENDIF 
@@ -123,7 +111,7 @@ C C
          IF(LATT.EQ.2)THEN
            IF (MOD(TEST,2.0D0).NE.0.0D0) THEN
               WRITE(6,*)'NPART,MUST BE AN EVEN NO'
-C              STOP
+              STOP
            ELSE
               TEST=(NPART*YZDIVX/2.0D0)**(1.0D0/3.0D0)
               TESTL=TEST-0.0000001
@@ -132,7 +120,7 @@ C              STOP
              IF (ANINT(TEST).LT.TESTL.OR.ANINT(TEST).GT.TESTH) THEN
                 WRITE(6,*)'NPART MUST BE 2*N^3, WHERE N IS AN INTEGER'
                 WRITE(6,*)TESTL,TESTH
-C                STOP
+                STOP
              END IF
            END IF
           END IF
@@ -173,23 +161,6 @@ C
       ELSE 
          DF=3.0D0*DBLE(NPART)-4.0D0 
       ENDIF
-C
-C
-C
-      WRITE(6,*) TR,DRW,DRF,DELTA,LATT,NPART,NLP
-      WRITE(6,*) FE0,RCUT,NLAYER,KH,NPRINT
-      WRITE(6,*) MIX, EPS1, EPS2, QVOL
-      WRITE(6,*) KF,R0,LIMOL,YZDIVX
-      WRITE(6,*) DXXDIV
-      WRITE(6,*) NTYPE,NON,NGAUS,E0
-      WRITE(6,*) NPLOT,MAXTAU,EQTIM,NCYC
-      WRITE(6,*) 'TR,DRW,DRF,DELTA,LATT,NPART,NLP'
-      WRITE(6,*) 'FE0,RCUT,NLAYER,KH,NPRINT'
-      WRITE(6,*) 'KF,R0,LIMOL,YZDIVX'
-      WRITE(6,*) 'MIX, EPS1, EPS2, QVOL'
-      WRITE(6,*) 'DXXDIV'
-      WRITE(6,*) 'NTYPE,NON,NGAUS,E0'
-      WRITE(6,*) 'NPLOT,MAXTAU,EQTIM,NCYC'
 C
 C***** ZERO ARRAYS
 C
@@ -232,8 +203,9 @@ C      RCUT SET TO 2**(1/6) FOR WCA POTENTIAL
 C      SEED set as unix time 
         ISEED = 10101
 C       ISEED = TIME()
-        WRITE(6,*) 'SEED', ISEED  
-C      RCUT = 2.0D0**(1.0D0/6.0D0)
+#ifdef DEBUG
+       WRITE(6,*) 'SEED', ISEED  
+#endif
 C
 C***** CALCULATE RUN PARAMETERS
 C
@@ -268,6 +240,7 @@ C      MIX applies mixing rules  based on EPS1 and EPS2
 C
 C***** WRITE SIMULATION PARAMETERS
 C
+#ifdef DEBUG
       WRITE(6,150) NPART
       WRITE(6,151) TR,E0,DRW,DRF,RCUT,FE0,NTYPE,
      &             DELTA,NON,RCUT,NGAUS,CUBE,MAXTAU,
@@ -291,34 +264,15 @@ C
      &       /,5X,'YZDIVX =',F14.7,10X,'CUBEX =',F14.7,
      &       /,5X,'CUBEY =',F14.7,10X,'CUBEZ =',F14.7,
      &       /,5X,'DXXDIV =',F14.7)
-C
-C***** OPEN FILES FOR POSITIONS AND CHECKS
-      OPEN(UNIT=17,FILE='NTYPE=1 POSITION.xyz',STATUS='UNKNOWN',
-     &       FORM='FORMATTED')
-      OPEN(UNIT=18,FILE='NTYPE=2 POSITION.xyz',STATUS='UNKNOWN',
-     &       FORM='FORMATTED')
-      OPEN(UNIT=38,FILE='IKOL_IMOL_SWITCHES',STATUS='UNKNOWN',
-     &       FORM='FORMATTED')
-      OPEN(UNIT=39,FILE='CHECK TEMP FOR EQTIM',STATUS='UNKNOWN',
-     &       FORM='FORMATTED')
-C       OPEN(UNIT=40,FILE='EQ_POSTIONS',STATUS='UNKNOWN',
-C      &       FORM='FORMATTED')
-C        WRITE(40,*)'NPART,X,XEQ'
-      OPEN(UNIT=41,FILE='VELOCITY_TEMP',STATUS='UNKNOWN',
-     &       FORM='FORMATTED')
-      OPEN(UNIT=42,FILE='DISSIPATION',STATUS='UNKNOWN',
-     &       FORM='FORMATTED')
-      OPEN(UNIT=57,FILE='NHCHECK',STATUS='UNKNOWN',
-     &       FORM='FORMATTED')
+#endif
+
 C
 C****************************************************************
 C
 C***** INITIAL STARTUP
 C
-      IF (NTYPE.EQ.1) THEN
 C
 C***** NTYPE=1  INITIAL FROM FCC
-         WRITE(6,*) 'FCC'
 C
          CALL FCC
 
@@ -333,6 +287,7 @@ C
 C***** UPDATE INPUT UNIT
 C
 C
+#ifdef DEBUG
       WRITE(6,*) TR,DRW,DRF,DELTA,LATT,NPART,NLP
       WRITE(6,*) FE0,RCUT,NLAYER,KH,NPRINT
       WRITE(6,*) MIX, EPS1, EPS2, QVOL
@@ -347,163 +302,28 @@ C
       WRITE(6,*) 'DXXDIV'
       WRITE(6,*) 'NTYPE,NON,NGAUS,E0'
       WRITE(6,*) 'NPLOT,MAXTAU,EQTIM,NCYC'
-         CLOSE(UNIT=1)
 
 C***** CHECK IMOL IKOL AND SWITCHES
-        WRITE(38,*)'I,IMOL(I),IKOL(I),S1(I),S2(I),S3(I),S4(I)'
+        WRITE(6,*)'I,IMOL(I),IKOL(I),S1(I),S2(I),S3(I),S4(I)'
         DO I=1,NPART
-         WRITE(38,*)I,IMOL(I),IKOL(I),S1(I),S2(I),S3(I),S4(I)
+         WRITE(6,*)I,IMOL(I),IKOL(I),S1(I),S2(I),S3(I),S4(I)
         ENDDO
-        CLOSE(UNIT=38)
+#endif
 C
-C***** DO EQUILIBRATION
+C CALCULATE PROPERTIES AT TIME ZERO
 C
-C         WRITE(6,45)
-C         WRITE(16,75)
          KE2=0.0D0
          DO 565 I=1, NPART
             KE2 = KE2+(PX(I)**2+PY(I)**2+PZ(I)**2)
  565     CONTINUE
 c         write(6,*)'force 1'
          CALL FORCECELL 
-         E00=UWALL+KE2/2.0D0
+         E00=UPOT+KE2/2.0D0
          FIELD=0.0D0
 
-         CALL MD(EQTIM,0)
-         CALL VOUT
-         CALL OUT2
-      ELSE
-C
-C***** READ COORDINATES AND MOMENTA FROM F02
-C
-       CALL READ2
-C***** IF CONTINUING FROM PREVIOUS RUN, READ IN ACCUMULATED
-C***** AVERAGES AND MEANS FROM F02
-C
-         IF (NTYPE.EQ.3) THEN
-            CALL READ3
-            CALL READ4
-         END IF
-C
-C
-C****************************************************************
-
-      DO 1000 J=1,NCYC 
-         FIELD=0.0D0
-C
-         CALL MD(EQTIM,0)
-         CALL VOUT
-C
-         FIELD=FE0
-C
-C******START FROM INITIAL POINT
-C 
-        
-         CALL MD(MAXTAU,1) 
-         CALL VIN
-C
-C******REVERSE MAP OF POSITIONS & MOMENTUM
-         DO I=1,NPART
-             PX(I)= -PX(I)
-             PY(I)= -PY(I)
-             PZ(I)= -PZ(I)
-         ENDDO
-
-         CALL MD(MAXTAU,1)
-         CALL VIN
-
-! HOMOGENEOUS SYSTEM DO NOT APPLY 
-
-C      START FROM X-MAP
-
-
-C          DO I=1,NPART
-C              PX(I)=-PX(I)
-C              X(I)=-X(I) + CUBEX
-C          ENDDO
-
-C          CALL MD(MAXTAU,1) 
-C          CALL VIN
-
-C C        START FROM K-MAP with reflection in X  
-
-C          DO I=1,NPART
-C              X(I)= -X(I) + CUBEX
-C              PY(I)= -PY(I)
-C              PZ(I)= -PZ(I)
-C          ENDDO
-
-C          CALL MD(MAXTAU,1) 
-C          CALL VIN
-
-
-         IF (MOD(J,10).EQ.0.OR.J.EQ.NCYC) THEN
-         CALL OUT2
-         CALL OUT3
-         CALL OUT4
-         END IF
- 1000  CONTINUE
-      ENDIF
+C***** UPDATE INITIAL TEMPERATURE
+         TEMP = (KE2/2.0D0)/(DF/2.0D0)
        
-C
-C***** WRITE OUTPUT FILES
-C
-C***** AVERAGE TCF
-C
-C      WRITE(13,*)'<temp> <alph> <toten>'
-C      WRITE(14,*)'<Vx/N> <Vy/N> <Vz/N> <Vxl/Nl> <Vyl/Nl> <Vzl/Nl>'
-C      WRITE(15,*)'<Jx/N> <Jy/N> <Jz/N> <Jxl/Nl> <Jyl/Nl> <Jzl/Nl>'
-C      WRITE(16,*)'<1/nbin><1/nbinll><1/nbinl0> <nbin> <nbinll> <nbinl0>'
-
-      DO 600 I=0,MAXTAU
-C         WRITE(13,65)(AVER(I,J),J=20,22)
-C         WRITE(14,65)(AVER(I,J),J=1,6)
-C         WRITE(15,65)(AVER(I,J),J=7,12)
-C         WRITE(16,65)(AVER(I,J),J=13,18)
- 600  CONTINUE
-C
-C***** INTEGRATE TCF
-C
-      DO 100 I=1,NTCF
-         INTCF1(0,I)=0.0D0
-         DO 110 J=1,MAXTAU
-            INTCF1(J,I)=INTCF1(J-1,I)+
-     &                 0.5D0*DELTA*(TCF1(J,I)+TCF1(J-1,I))
-            INTCF(J,I)=INTCF(J-1,I)+
-     &                 0.5D0*DELTA*(TCF(J,I)+TCF(J-1,I))
- 110     CONTINUE
- 100  CONTINUE
-
-      DO I=1,NPART
-         TOTPX=TOTPX+PX(I)
-         TOTPY=TOTPY+PY(I)
-         TOTPZ=TOTPZ+PZ(I)
-      ENDDO
-      DO I=1,NPART2
-         AR1PX=AR1PX+PX(I)
-         AR1PY=AR1PY+PY(I)
-         AR1PZ=AR1PZ+PZ(I) 
-      ENDDO
-      DO I=NPART2+1,NPART
-         AR2PX=AR2PX+PX(I)
-         AR2PY=AR2PY+PY(I)
-         AR2PZ=AR2PZ+PZ(I)
-      ENDDO
-
-C***** CALCULATE MOMENTS, ETC
-C
-      IF (NTYPE.GT.1) THEN
-         CALL MOMENTS
-      ENDIF
-      
-      WRITE(6,*)'CHECK TOTAL MOMENTUM'
-      WRITE(6,*)'TOTPX,TOTPY,TOTPZ',TOTPX,TOTPY,TOTPZ
-      WRITE(6,*)'AR1PX,AR1PY,AR1PZ',AR1PX,AR1PY,AR1PZ
-      WRITE(6,*)'AR2PX,AR2PY,AR2PZ',AR2PX,AR2PY,AR2PZ
-
-C
-C***** FINISH
-C
  45   FORMAT(/,2X,'EQUILIBRATION - INSTANTANEOUS VALUES',/,8X,
      &  'STEP    TEMP    UPOT/NP    TOTE/NP  ALPHA')
  75   FORMAT(/,2X,'EQUILIBRATION - INSTANTANEOUS VALUES',/,8X,
@@ -513,7 +333,9 @@ C
  85    FORMAT(/,2X,'EQUILIBRATION - INSTANTANEOUS VALUES',/,8X,
      &  'STEP    TEMP    UPOT/NP    TOTE/NP  ALPHA')
  65   FORMAT(6E14.6)
-      END
+      END SUBROUTINE
+
+
 C
 C**********************************************************
 C
@@ -1184,7 +1006,6 @@ C***** CALCULATES FORCEL ON EACH PARTICLE, TOTAL POTENTIAL ENERGY
 C      THERMOSTAT:ALPH, ADN CONFIGURATIONAL PART OF PRESSURE TENSOR
 C***** WITH A WCA POTENTIAL
 C
-      USE OMP_LIB
       INCLUDE "SSGK.inc"
 C
 C***** LOCAL VARIABLES
@@ -1251,10 +1072,6 @@ C
 C
 C**** SORT PARTICLES INTO CELLS
 C
-C$OMP  PARALLEL DO DEFAULT(NONE)
-C$OMP& SHARED(NPART, NCELLX, NCELLY, NCELLZ, CUBINVX, CUBINVY, CUBINVZ,
-C$OMP&        NUMCELL, ICELL, X, Y, Z)
-C$OMP& PRIVATE(ICX, ICY, ICZ, ICXD, ICYD, ICZD, NIC)
       DO 11 I=1,NPART
             ICXD  =(X(I)*DFLOAT(NCELLX))*CUBINVX
                IF (ICXD.LT.0) THEN
@@ -1287,13 +1104,8 @@ C
 C
 C**** NUMCELL(ICX,ICY,ICZ) NUMBER IN CELL 'IC'
 C
-C These two operations need to happen atomically with the above 
-C write. We want to avoid the possibility that another thread could 
-C increment NUMCELL before this thread can read from it to get NIC
-C$OMP ATOMIC CAPTURE
             NUMCELL(ICX,ICY,ICZ) = NUMCELL(ICX,ICY,ICZ)+1
             NIC = NUMCELL(ICX,ICY,ICZ)
-C$OMP END ATOMIC
 
 C**** SO THE iTH PATICLE OF A CELL CAN BE EXPRESSED AS THE NICth
 C     PARTICLE IN BOX ICX,ICY,ICZ. EACH PARTICLE CAN ONLY BE IN
@@ -1308,14 +1120,6 @@ C      IF (NIC.GT.NA) STOP
 C
 C**** START GOING THROUGH CELLS
 C
-C$OMP  PARALLEL DO COLLAPSE(3) DEFAULT(NONE) SCHEDULE(STATIC)
-C$OMP& SHARED(NCELLX, NCELLY, NCELLZ, NUMCELL, ICELL, X, Y, Z, ROUT2,
-C$OMP&        CUBEX, CUBEY, CUBEZ, RMAX, IMOL, EPS1, EPS2, MIX, SHIFT,
-C$OMP&        NGAUS, S1, S2, RBIN_INV)
-C$OMP& PRIVATE(JCX, JCY, JCZ, JJCX, I1, I2, I, J, RX, RY, RZ, 
-C$OMP&         RX2, RY2, RZ2, RSQ, EPS12, R4, R6, R12, RSCALAR, RSI,
-C$OMP&         NIC, NJC, FIJX, FIJY, FIJZ, IBIN)
-C$OMP& REDUCTION(+:UPOT, FX, FY, FZ, RIJ_HIST)
       DO 22 ICX = 1,NCELLX
       DO 22 ICY = 1,NCELLY
       DO 22 ICZ = 1,NCELLZ
@@ -1963,3 +1767,4 @@ C
 C
 C
 
+C      END MODULE

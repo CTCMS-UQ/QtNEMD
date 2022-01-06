@@ -22,7 +22,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Set the OMP_NUM_THREADS environment variable to 1 for the moment
         # TODO: Do we need parallelism here?
-        os.environ['OMP_NUM_THREADS'] = str(1)
         self.md = FortranDriver.MDInterface()
         # Timestep
         self.tau = 0
@@ -195,11 +194,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Also want to disable the Npart spinbox, since it makes no sense to change the particle number
         # while the simulation is running
-        self.ui.temp_spinbox.setEnabled(False)
+        #self.ui.temp_spinbox.setEnabled(False)
         #self.ui.e0_spinbox.setEnabled(False)
         #self.ui.field_spinbox.setEnabled(False)
         self.ui.density_spinbox.setEnabled(False)
-        self.ui.lj_eps_spinbox.setEnabled(False)
+        #self.ui.lj_eps_spinbox.setEnabled(False)
         
         # Finally, run an MD timestep
         self.md.run(1)
@@ -224,12 +223,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tau = 0
 
         # Re-enable buttons which can't be changed while the simulation is running
-        self.ui.temp_spinbox.setEnabled(True)
+        #self.ui.temp_spinbox.setEnabled(True)
         #self.ui.e0_spinbox.setEnabled(True)
         #self.ui.field_spinbox.setEnabled(True)
         self.ui.density_spinbox.setEnabled(True)
         self.ui.start_button.setEnabled(True)
-        self.ui.lj_eps_spinbox.setEnabled(True)
+        #self.ui.lj_eps_spinbox.setEnabled(True)
         
         self.ui.plot_window.clear()
         self.ui.rdf_window.clear()

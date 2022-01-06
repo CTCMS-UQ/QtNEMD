@@ -97,7 +97,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.rdf_window.setBackground('w')
         self.rdf_data = self.ui.rdf_window.plot(r[1:], rdf[1:], color='k')
         
-
         # Initialise the N, V and T labels
         self.ui.npart_label.setText(f"N particles = {self.md.npart}")
         self.ui.volume_label.setText(f"Vol = {self.md.vol:.2f}")

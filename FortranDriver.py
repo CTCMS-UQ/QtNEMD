@@ -158,11 +158,11 @@ class MDInterface:
     # Radial distribution function. This returns into two arrays for r and g(2)(r), stored as a tuple
     def rdf_compute(self):
 
-      # RDF already computed by Fortran backend during Force calculation, just need to normalise it
-      rdf = self.vol/(self.npart**2)*TTCF.averg.rij_hist[np.nonzero(TTCF.averg.rij_hist)]
-      # Now calculate the bin coordinates
-      r = np.array([i/TTCF.averg.rbin_inv for i in range(len(rdf))])
-      return({'r': r, 'rdf':rdf})
+        # RDF already computed by Fortran backend during Force calculation, just need to normalise it
+        rdf = self.vol/(self.npart**2)*TTCF.averg.rij_hist[np.nonzero(TTCF.averg.rij_hist)]
+        # Now calculate the bin coordinates
+        r = np.array([i/TTCF.averg.rbin_inv for i in range(len(rdf))])
+        return({'r': r, 'rdf':rdf})
 
     def reset_and_update_parameters(self):
         # Reset the simulation and initialise the parameters
@@ -239,13 +239,13 @@ class MDInterface:
 
     def toggle_nemd(self):
         if(self._do_nemd):
-          self._do_nemd = False
-          self._iflag = 0
-          self.update_parameters()
+            self._do_nemd = False
+            self._iflag = 0
+            self.update_parameters()
         else:
-          self._do_nemd = True
-          self._iflag = 1
-          self.update_parameters()
+            self._do_nemd = True
+            self._iflag = 1
+            self.update_parameters()
 
     def format_params(self):
         """ Make a format string for the input which can be either written to file or displayed in Qt."""
@@ -311,10 +311,7 @@ NPLOT,MAXTAU,EQTIM,NCYC"""
 
     def run(self, nsteps):
         # First, advance the simulation
-        if(nsteps >= 0):
-            TTCF.md(nsteps, self._iflag)
-        else:
-            raise(ValueError)
+        TTCF.md(nsteps, self._iflag)
         
         # Now update all of our thermodynamic parameters with values from LAMMPS
         self.get_params_from_TTCF()

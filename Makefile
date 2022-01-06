@@ -24,7 +24,7 @@ bare:
 .PHONY: clean
 .PHONY: veryclean
 clean:
-	rm TTCF.pyf TTCF.cpython* Walls_SSGK
+	rm TTCF.pyf TTCF.cpython* 
 veryclean:	
 	rm TTCF.pyf TTCF.cpython* 
 	rm GUI-resources/ui_mainwindow.py GUI-resources/ui_floating_plot.py

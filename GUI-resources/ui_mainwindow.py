@@ -194,7 +194,7 @@ class Ui_MainWindow(object):
         self.temp_spinbox.setAccessibleDescription(_translate("MainWindow", "Spinbox to set the temperature of the simulation (can only be used while the smulation is stopped)"))
         self.tr_label.setText(_translate("MainWindow", "Temperature"))
         self.label.setText(_translate("MainWindow", "<html><head/><body><p>g(r) radial distribution function</p></body></html>"))
-        self.textbrowser_label.setText(_translate("MainWindow", "LAMMPS Input file (read only)"))
+        self.textbrowser_label.setText(_translate("MainWindow", "Fortran Input file (read only)"))
         self.input_textbrowser.setToolTip(_translate("MainWindow", "Input parameters for simulation"))
         self.input_textbrowser.setWhatsThis(_translate("MainWindow", "Input parameters for simulation in input file format"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))

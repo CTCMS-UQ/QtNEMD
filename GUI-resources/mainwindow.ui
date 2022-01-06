@@ -279,7 +279,7 @@
       <item>
        <widget class="QLabel" name="textbrowser_label">
         <property name="text">
-         <string>LAMMPS Input file (read only)</string>
+         <string>Fortran Input file (read only)</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>

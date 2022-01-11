@@ -1,13 +1,14 @@
 #!/usr/bin/python
-
-""" This is a template class to interface with whatever MD backend code we decide to 
-    use. It should only include the broadest outline of functionality, which can be 
-    overridden to support, e.g. LAMMPS or Debra's MD code."""
-
 import TTCF
 import numpy as np
 
+
 class MDInterface:
+    """ This is a template class to interface with whatever MD backend code we decide to use.
+
+        It should only include the broadest outline of functionality, which can be
+        overridden to support, e.g. LAMMPS or Debra's MD code."""
+
     def __init__(self):
         self._tr     = 1.0
         self._drw    = 1.0
@@ -43,7 +44,7 @@ class MDInterface:
         self._eqtim  = 1000
         self._ncyc   = 1
 
-        # Lastly, set the internal flag determining whether to turn on the NEMD field 
+        # Lastly, set the internal flag determining whether to turn on the NEMD field
         self._do_nemd = False
         self._iflag = 0
         self._box_bounds = (None, None, None)
@@ -57,8 +58,8 @@ class MDInterface:
         # Finally, pass these values into the simulation
         self.setup()
 
-###################### Getters and setters (properties) #######################
-
+    # Getters and setters (properties)
+    #
     # Box coords/initial conditions. Need to reset the simulation if these change
     @property
     def yzdivx(self):
@@ -67,6 +68,7 @@ class MDInterface:
     def yzdivx(self, value):
         self._yzdivx = value
         self.reset_and_update_parameters()
+
     @property
     def reduced_density(self):
         return(self._drf)
@@ -100,6 +102,7 @@ class MDInterface:
     def fieldstrength(self, value):
         self._fe0 = value
         self.update_parameters()
+
     @property
     def temp(self):
         return(TTCF.averg.temp)
@@ -107,8 +110,9 @@ class MDInterface:
     def temp(self, value):
         self._tr = value
         self.update_parameters()
-    
-    # Get the status of whether we're doing nonequilubrium calculations. No setter, since this is handled by toggle_nemd()
+
+    # Get the status of whether we're doing nonequilubrium calculations.
+    # No setter, since this is handled by toggle_nemd()
     @property
     def do_nemd(self):
         return(self._do_nemd)
@@ -117,26 +121,30 @@ class MDInterface:
     @property
     def x(self):
         return(TTCF.coord.x[:self._npart])
+
     @property
     def y(self):
         return(TTCF.coord.y[:self._npart])
+
     @property
     def z(self):
         return(TTCF.coord.z[:self._npart])
+
     @property
     def box_bounds(self):
         return(self._box_bounds)
-    
+
     @property
     def vol(self):
         return(TTCF.nopart.npart / TTCF.parm.drf)
 
-###################### Callable methods ###########################
+    # Callable methods
     def setup(self):
-        # This function gets called at the start of the program's run, as well as whenever we restart the simulation.
+        # This function gets called at the start of the program's run, as well as
+        # whenever we restart the simulation.
         self.update_parameters()
         TTCF.setup()
-        TTCF.md(1,0)
+        TTCF.md(1, 0)
 
         # Zero array for g(2) RDF
         self.delta_r = np.zeros([self.npart, self.npart])
@@ -145,7 +153,8 @@ class MDInterface:
         self.get_params_from_TTCF()
 
     def get_params_from_TTCF(self):
-        # Update this class's parameters with the values from LAMMPS. This doesn't change the underlying simulation
+        # Update this class's parameters with the values from LAMMPS. This doesn't
+        # change the underlying simulation
         self._temp = TTCF.averg.temp
         self._vol = TTCF.nopart.npart / TTCF.parm.drf
         # And particle positions
@@ -154,88 +163,86 @@ class MDInterface:
         self._z = TTCF.coord.z[:self._npart]
         self._box_bounds = (TTCF.parm.cubex, TTCF.parm.cubey, TTCF.parm.cubez)
 
-
     # Radial distribution function. This returns into two arrays for r and g(2)(r), stored as a tuple
     def rdf_compute(self):
-
         # RDF already computed by Fortran backend during Force calculation, just need to normalise it
-        rdf = self.vol/(self.npart**2)*TTCF.averg.rij_hist[np.nonzero(TTCF.averg.rij_hist)]
+        rdf = self.vol / (self.npart**2) * TTCF.averg.rij_hist[np.nonzero(TTCF.averg.rij_hist)]
         # Now calculate the bin coordinates
         r = np.array([i/TTCF.averg.rbin_inv for i in range(len(rdf))])
-        return({'r': r, 'rdf':rdf})
+        return({'r': r, 'rdf': rdf})
 
     def reset_and_update_parameters(self):
         # Reset the simulation and initialise the parameters
-        TTCF.inener.tr      = self._tr      
-        TTCF.parm.drw       = self._drw    
-        TTCF.parm.drf       = self._drf    
-        TTCF.simul.delta    = self._delta  
-        TTCF.iparm.latt     = self._latt   
-        TTCF.nopart.npart   = self._npart   
-                                        
-        TTCF.parm.fe0       = self._fe0    
-        TTCF.parm.rcut      = self._rcut   
-        TTCF.parm.kh        = self._kh     
-        TTCF.iparm.nprint   = self._nprint 
-                                          
-        TTCF.parm.mix       = self._mix    
-        TTCF.parm.eps1      = self._eps1   
-        TTCF.parm.eps2      = self._eps2   
-        TTCF.coord.qvol     = self._qvol   
-                                          
-        TTCF.parm.kf        = self._kf     
-        TTCF.parm.r0        = self._r0     
-        TTCF.nopart.limol   = self._limol   
-        TTCF.parm.yzdivx    = self._yzdivx 
-                                         
-        TTCF.parm.dxxdiv    = self._dxxdiv 
-        TTCF.iparm.ntype    = self._ntype  
-                                          
-        TTCF.iparm.non      = self._non    
-        TTCF.iparm.ngaus    = self._ngaus  
-        TTCF.inener.e0      = self._e0     
-                                       
-        TTCF.iparm.nplot    = self._nplot  
-        TTCF.iparm.maxtau   = self._maxtau 
-        TTCF.iparm.eqtim    = self._eqtim  
+        TTCF.inener.tr      = self._tr
+        TTCF.parm.drw       = self._drw
+        TTCF.parm.drf       = self._drf
+        TTCF.simul.delta    = self._delta
+        TTCF.iparm.latt     = self._latt
+        TTCF.nopart.npart   = self._npart
+
+        TTCF.parm.fe0       = self._fe0
+        TTCF.parm.rcut      = self._rcut
+        TTCF.parm.kh        = self._kh
+        TTCF.iparm.nprint   = self._nprint
+
+        TTCF.parm.mix       = self._mix
+        TTCF.parm.eps1      = self._eps1
+        TTCF.parm.eps2      = self._eps2
+        TTCF.coord.qvol     = self._qvol
+
+        TTCF.parm.kf        = self._kf
+        TTCF.parm.r0        = self._r0
+        TTCF.nopart.limol   = self._limol
+        TTCF.parm.yzdivx    = self._yzdivx
+
+        TTCF.parm.dxxdiv    = self._dxxdiv
+        TTCF.iparm.ntype    = self._ntype
+
+        TTCF.iparm.non      = self._non
+        TTCF.iparm.ngaus    = self._ngaus
+        TTCF.inener.e0      = self._e0
+
+        TTCF.iparm.nplot    = self._nplot
+        TTCF.iparm.maxtau   = self._maxtau
+        TTCF.iparm.eqtim    = self._eqtim
         TTCF.iparm.ncyc     = self._ncyc
         TTCF.setup()
 
     def update_parameters(self):
         # Only update the parameters which don't require a reset
-        TTCF.inener.tr      = self._tr      
-        TTCF.parm.drw       = self._drw    
-        TTCF.parm.drf       = self._drf    
-        TTCF.simul.delta    = self._delta  
-        TTCF.iparm.latt     = self._latt   
-        TTCF.nopart.npart   = self._npart   
-                                        
-        TTCF.parm.fe0       = self._fe0    
-        TTCF.parm.rcut      = self._rcut   
-        TTCF.parm.kh        = self._kh     
-        TTCF.iparm.nprint   = self._nprint 
-                                          
-        TTCF.parm.mix       = self._mix    
-        TTCF.parm.eps1      = self._eps1   
-        TTCF.parm.eps2      = self._eps2   
-        TTCF.coord.qvol     = self._qvol   
-                                          
-        TTCF.parm.kf        = self._kf     
-        TTCF.parm.r0        = self._r0     
-        TTCF.nopart.limol   = self._limol   
-        TTCF.parm.yzdivx    = self._yzdivx 
-                                         
-        TTCF.parm.dxxdiv    = self._dxxdiv 
-        TTCF.iparm.ntype    = self._ntype  
-                                          
-        TTCF.iparm.non      = self._non    
-        TTCF.iparm.ngaus    = self._ngaus  
-        TTCF.inener.e0      = self._e0     
-                                       
-        TTCF.iparm.nplot    = self._nplot  
-        TTCF.iparm.maxtau   = self._maxtau 
-        TTCF.iparm.eqtim    = self._eqtim  
-        TTCF.iparm.ncyc     = self._ncyc      
+        TTCF.inener.tr      = self._tr
+        TTCF.parm.drw       = self._drw
+        TTCF.parm.drf       = self._drf
+        TTCF.simul.delta    = self._delta
+        TTCF.iparm.latt     = self._latt
+        TTCF.nopart.npart   = self._npart
+
+        TTCF.parm.fe0       = self._fe0
+        TTCF.parm.rcut      = self._rcut
+        TTCF.parm.kh        = self._kh
+        TTCF.iparm.nprint   = self._nprint
+
+        TTCF.parm.mix       = self._mix
+        TTCF.parm.eps1      = self._eps1
+        TTCF.parm.eps2      = self._eps2
+        TTCF.coord.qvol     = self._qvol
+
+        TTCF.parm.kf        = self._kf
+        TTCF.parm.r0        = self._r0
+        TTCF.nopart.limol   = self._limol
+        TTCF.parm.yzdivx    = self._yzdivx
+
+        TTCF.parm.dxxdiv    = self._dxxdiv
+        TTCF.iparm.ntype    = self._ntype
+
+        TTCF.iparm.non      = self._non
+        TTCF.iparm.ngaus    = self._ngaus
+        TTCF.inener.e0      = self._e0
+
+        TTCF.iparm.nplot    = self._nplot
+        TTCF.iparm.maxtau   = self._maxtau
+        TTCF.iparm.eqtim    = self._eqtim
+        TTCF.iparm.ncyc     = self._ncyc
 
     def toggle_nemd(self):
         if(self._do_nemd):
@@ -249,7 +256,7 @@ class MDInterface:
 
     def format_params(self):
         """ Make a format string for the input which can be either written to file or displayed in Qt."""
-        
+
         # Write the input parameters, making sure to preserve whitespace and newlines
         # Write the input parameters, making sure to preserve whitespace and newlines
         param_str  =   f"""{self._tr:.3f}  {self._drw:.3f}  {self._drf:.3f}   {self._delta:.3f} {self._latt} {self._npart} 25"""
@@ -272,29 +279,28 @@ NPLOT,MAXTAU,EQTIM,NCYC"""
     def read_from_file(self, input_file):
         # Read the input file line by line and assign to internal variables
         with open(input_file, "r") as ifp:
-            # Manually iterate through the data, since each line needs to go into a different set of 
+            # Manually iterate through the data, since each line needs to go into a different set of
             # variables
             data = next(ifp).split()
-            tr,drw,drf,delta,latt,npart,nlp = data
+            tr, drw, drf, delta, latt, npart, nlp = data
 
             data = next(ifp).split()
-            fe0,rcut,nlayer,kh,nprint = data
+            fe0, rcut, nlayer, kh, nprint = data
 
             data = next(ifp).split()
             mix, eps1, eps2, qvol = data
 
             data = next(ifp).split()
-            kf,r0,limol,xydivz = data
+            kf, r0, limol, xydivz = data
 
             dxxdiv = float(next(ifp))
 
             data = next(ifp).split()
-            ntype,non,ngaus,e0 = data
+            ntype, non, ngaus, e0 = data
 
             data = next(ifp).split()
-            nplot,maxtau,eqtim,ncyc = data
+            nplot, maxtau, eqtim, ncyc = data
 
-        
         # now cast the data we read from the file into the proper numpy types
         self._tr, self._drw, self._drf, self._delta = np.array([tr, drw, drf, delta]).astype(np.double)
         self._latt, self._npart = np.array([latt, npart]).astype(np.int)
@@ -312,6 +318,6 @@ NPLOT,MAXTAU,EQTIM,NCYC"""
     def run(self, nsteps):
         # First, advance the simulation
         TTCF.md(nsteps, self._iflag)
-        
+
         # Now update all of our thermodynamic parameters with values from LAMMPS
         self.get_params_from_TTCF()

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from PyQt5 import QtWidgets
-import sys 
+import sys
 import MainWindow
 
 

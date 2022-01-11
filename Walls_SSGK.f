@@ -345,9 +345,7 @@ C
       REAL (KIND=sp) DISS,DISSFN,PTK(3,3),PTKF(3,3) 
       INTEGER TMAX,K,NINBIN,NINBINL,NINBIN0L
 C
-      DO 101 I=1,NTCF
-         TAUAV(I)=0.0D0
- 101  CONTINUE
+      TAUAV = 0.0D0
 
 C Turn on the field as appropriate
       IF (IFLAG .EQ. 0) THEN
@@ -1616,21 +1614,11 @@ C
 C
 C***** ZERO ARRAYS
 C
-      DO 1 I = 1, NPART
-         FX(I) = 0.0D0
-         FY(I) = 0.0D0
-         FZ(I) = 0.0D0
-    1 CONTINUE
+      FX = 0.0D0
+      FY = 0.0D0
+      FZ = 0.0D0
 C
-      PT(1,1) = 0.0D0
-      PT(1,2) = 0.0D0
-      PT(1,3) = 0.0D0
-      PT(2,1) = 0.0D0
-      PT(2,2) = 0.0D0
-      PT(2,3) = 0.0D0
-      PT(3,1) = 0.0D0
-      PT(3,2) = 0.0D0
-      PT(3,3) = 0.0D0
+      PT       = 0.0D0
       UPOT     = 0.0D0
 C
 C***** CALCULATE DISTANCE BETWEEN PARTICLE I AND J

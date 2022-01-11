@@ -164,39 +164,24 @@ C
 C
 C***** ZERO ARRAYS
 C
-      DO I = 0, NK
-          DO J= 0, NBINS
-            DENSAV1(I,J) = 0.0D0
-            DENSAV2(I,J) = 0.0D0
-              DO K = 1, NTCF
-                TCFL(I,J,K) = 0.0D0
-                TCFLL(I,J,K) = 0.0D0
-                INTCFL(I,J,K) = 0.0D0
-                INTCFLL(I,J,K) = 0.0D0
-              ENDDO    
-          ENDDO       
-      ENDDO
-
-      DO 1 I = 0, NK
-         KOUNT(I) = 0
-         DO 2 J = 1, NTCF
-            AVER(I,J)=0.0D0
-            TCF(I,J) = 0.0D0
-            INTCF(I,J) = 0.0D0
-            TCF1(I,J) = 0.0D0
-            INTCF1(I,J) = 0.0D0
- 2       CONTINUE
- 1    CONTINUE
+      DENSAV1 = 0.0D0
+      DENSAV2 = 0.0D0
+      TCFL = 0.0D0
+      TCFLL = 0.0D0
+      INTCFL = 0.0D0
+      INTCFLL = 0.0D0
+      KOUNT = 0
+      AVER = 0.0D0
+      TCF = 0.0D0
+      INTCF = 0.0D0
+      TCF1 = 0.0D0
+      INTCF1 = 0.0D0
       NMEAN = 0
-      DO 3 I=1,NPROP
-         MEAN(I) = 0.0D0
- 3    CONTINUE
-      DO 44 I=1,NTCF
-         M0(I)=0.0D0
-         M1(I)=0.0D0
-         M2(I)=0.0D0
-         M3(I)=0.0D0
- 44   CONTINUE
+      MEAN = 0.0D0
+      M0 = 0.0D0
+      M1 = 0.0D0
+      M2 = 0.0D0
+      M3 = 0.0D0
 C
 C***** SET INITIAL VALUES
 C      RCUT SET TO 2**(1/6) FOR WCA POTENTIAL

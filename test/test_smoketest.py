@@ -3,7 +3,6 @@ import unittest
 import sys
 sys.path.append("../")
 import FortranDriver
-import TTCF
 import numpy as np
 
 class DriverSmokeTest(unittest.TestCase):

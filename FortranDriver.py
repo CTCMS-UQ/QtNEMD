@@ -55,7 +55,7 @@ class MDInterface:
         self._rdf_arrays = None
 
         # Finally, pass these values into the simulation
-        self.reset_and_update_parameters()
+        self.setup()
 
 ###################### Getters and setters (properties) #######################
 
@@ -134,7 +134,7 @@ class MDInterface:
 ###################### Callable methods ###########################
     def setup(self):
         # This function gets called at the start of the program's run, as well as whenever we restart the simulation.
-        self.reset_and_update_parameters()
+        self.update_parameters()
         TTCF.setup()
         TTCF.md(1,0)
 

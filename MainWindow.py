@@ -77,8 +77,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def initialise_simulation(self):
 
-        self.md.setup()
-
         # Fix the X and Y ranges so they don't constantly shift throughout the simulation
         self.ui.plot_window.clear()
         bounds = self.md.box_bounds
@@ -233,6 +231,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.plot_window.clear()
         self.ui.rdf_window.clear()
 
+        self.md.setup()
         self.initialise_simulation()
 
     ######################### I/O Control routines ####################################

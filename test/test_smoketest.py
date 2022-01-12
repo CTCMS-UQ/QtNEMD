@@ -19,10 +19,14 @@ class DriverSmokeTest(unittest.TestCase):
     def test_md_short(self):
         """ Test a single step of the MD routine. """
         x_start, y_start, z_start = self.md.x.copy(), self.md.y.copy(), self.md.z.copy()
+        px_start, py_start, pz_start = self.md.px.copy(), self.md.py.copy(), self.md.pz.copy()
+        temp_start = self.md.temp
+
         self.md.run(1)
 
-        # Particle position should be different to when we start
         x_end, y_end, z_end = self.md.x.copy(), self.md.y.copy(), self.md.z.copy()
+        px_end, py_end, pz_end = self.md.px.copy(), self.md.py.copy(), self.md.pz.copy()
+        # Particle position should be different to when we start
         self.assertFalse(np.all(x_start == x_end))
         self.assertFalse(np.all(y_start == y_end))
         self.assertFalse(np.all(z_start == z_end))
@@ -38,12 +42,26 @@ class DriverSmokeTest(unittest.TestCase):
         self.assertTrue(np.all(self.md.z < self.md.box_bounds[0]))
         # Basic thermodynamic properties
         self.assertGreater(self.md.temp, 0.0)
+        self.assertAlmostEqual(self.md.temp, temp_start)
+
+        # Conservation of total momentum. This should hold because we initialise the momentum distribution
+        # to the desired temperature, which we don't change during this test. Using assertAlmostEqual
+        # to allow for finite floating point precision
+        self.assertAlmostEqual(np.sum(px_start), np.sum(px_end))
+        self.assertAlmostEqual(np.sum(py_start), np.sum(py_end))
+        self.assertAlmostEqual(np.sum(pz_start), np.sum(pz_end))
 
     def test_md_long(self):
         """ Test many steps of the MD routine"""
         x_start, y_start, z_start = self.md.x.copy(), self.md.y.copy(), self.md.z.copy()
+        px_start, py_start, pz_start = self.md.px.copy(), self.md.py.copy(), self.md.pz.copy()
+        temp_start = self.md.temp
+
         self.md.run(1000)
+
         x_end, y_end, z_end = self.md.x.copy(), self.md.y.copy(), self.md.z.copy()
+        px_end, py_end, pz_end = self.md.px.copy(), self.md.py.copy(), self.md.pz.copy()
+        # Particle position should be different to when we start
         self.assertFalse(np.all(x_start == x_end))
         self.assertFalse(np.all(y_start == y_end))
         self.assertFalse(np.all(z_start == z_end))
@@ -58,8 +76,17 @@ class DriverSmokeTest(unittest.TestCase):
         self.assertTrue(np.all(self.md.y < self.md.box_bounds[0]))
         self.assertTrue(np.all(self.md.z < self.md.box_bounds[0]))
 
-        # Basic thermodynamic properties
+        # Basic thermodynamic properties. Temperature can never go below zero, and shouldn't change too much
+        # over the course of this run.
         self.assertGreater(self.md.temp, 0.0)
+        self.assertAlmostEqual(self.md.temp, temp_start)
+
+        # Conservation of total momentum. This should hold because we initialise the momentum distribution
+        # to the desired temperature, which we don't change during this test. Using assertAlmostEqual
+        # to allow for finite floating point precision
+        self.assertAlmostEqual(np.sum(px_start), np.sum(px_end))
+        self.assertAlmostEqual(np.sum(py_start), np.sum(py_end))
+        self.assertAlmostEqual(np.sum(pz_start), np.sum(pz_end))
 
 if __name__ == '__main__':
     unittest.main()

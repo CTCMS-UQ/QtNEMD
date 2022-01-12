@@ -130,6 +130,19 @@ class MDInterface:
     def z(self):
         return(TTCF.coord.z[:self._npart])
 
+    # Momenta. Also read-only
+    @property
+    def px(self):
+        return(TTCF.moment.px[:self._npart])
+
+    @property
+    def py(self):
+        return(TTCF.moment.py[:self._npart])
+
+    @property
+    def pz(self):
+        return(TTCF.moment.pz[:self._npart])
+    
     @property
     def box_bounds(self):
         return(self._box_bounds)

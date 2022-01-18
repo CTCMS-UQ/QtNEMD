@@ -195,6 +195,17 @@ class MDInterface:
         msdz = TTCF.count.msdz
         return((msdx, msdy, msdz))
 
+    # The backend actually calculates and stores the pressure tensor, so we need to do some processing
+    # to get it into the right form for output
+    def compute_pressure(self):
+        p_tensor = TTCF.flux.pt
+        PXY = 0.5 * (p_tensor[0,1] + p_tensor[1,0])
+        PXZ = 0.5 * (p_tensor[0,1] + p_tensor[2,0])
+        PYZ = 0.5 * (p_tensor[1,2] + p_tensor[2,1])
+        PP = 0.5 * (p_tensor[0,0] + p_tensor[1,1] + p_tensor[2,2]) / 3
+        pressure = {"PXY": PXY, "PXZ": PXZ, "PYZ": PYZ, "PP": PP} # Dict to hold all the different pressure components
+        return(pressure)
+
     def reset_and_update_parameters(self):
         # Reset the simulation and initialise the parameters
         TTCF.inener.tr      = self._tr

@@ -1023,6 +1023,7 @@ C
       FY = 0.0D0
       FZ = 0.0D0
       RIJ_HIST = 0.D0
+      PT = 0.0D0
 
 C***** This is the number to sort the particle pairs' radial separations into the correct histogram bins
       RBIN_INV = 1.D0 / (RMAX/REAL(NBINS))
@@ -1209,7 +1210,16 @@ C***** Force calculation starts here
          FX(J)  = FX(J) - FIJX
          FY(J)  = FY(J) - FIJY
          FZ(J)  = FZ(J) - FIJZ
-
+C******* Update the elements of the pressure tensor
+         PT(1,1) = PT(1,1) + RX*FIJX
+         PT(1,2) = PT(1,2) + RX*FIJY
+         PT(1,3) = PT(1,3) + RX*FIJZ
+         PT(2,1) = PT(2,1) + RY*FIJX
+         PT(2,2) = PT(2,2) + RY*FIJY
+         PT(2,3) = PT(2,3) + RY*FIJZ
+         PT(3,1) = PT(3,1) + RZ*FIJX
+         PT(3,2) = PT(3,2) + RZ*FIJY
+         PT(3,3) = PT(3,3) + RZ*FIJZ
  61   CONTINUE
   3   CONTINUE
  21   CONTINUE

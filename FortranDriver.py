@@ -151,6 +151,10 @@ class MDInterface:
     def vol(self):
         return(TTCF.nopart.npart / TTCF.parm.drf)
 
+    @property
+    def timestep(self):
+        return(TTCF.simul.delta)
+
     # Callable methods
     def setup(self):
         # This function gets called at the start of the program's run, as well as
@@ -177,12 +181,30 @@ class MDInterface:
         self._box_bounds = (TTCF.parm.cubex, TTCF.parm.cubey, TTCF.parm.cubez)
 
     # Radial distribution function. This returns into two arrays for r and g(2)(r), stored as a tuple
-    def rdf_compute(self):
+    def compute_rdf(self):
         # RDF already computed by Fortran backend during Force calculation, just need to normalise it
         rdf = self.vol / (self.npart**2) * TTCF.averg.rij_hist[np.nonzero(TTCF.averg.rij_hist)]
         # Now calculate the bin coordinates
         r = np.array([i/TTCF.averg.rbin_inv for i in range(len(rdf))])
         return({'r': r, 'rdf': rdf})
+
+    # Mean-square displacement
+    def compute_msd(self):
+        msdx = TTCF.count.msdx
+        msdy = TTCF.count.msdy
+        msdz = TTCF.count.msdz
+        return((msdx, msdy, msdz))
+
+    # The backend actually calculates and stores the pressure tensor, so we need to do some processing
+    # to get it into the right form for output
+    def compute_pressure(self):
+        p_tensor = TTCF.flux.pt
+        PXY = 0.5 * (p_tensor[0,1] + p_tensor[1,0])
+        PXZ = 0.5 * (p_tensor[0,1] + p_tensor[2,0])
+        PYZ = 0.5 * (p_tensor[1,2] + p_tensor[2,1])
+        PP = 0.5 * (p_tensor[0,0] + p_tensor[1,1] + p_tensor[2,2]) / 3
+        pressure = {"PXY": PXY, "PXZ": PXZ, "PYZ": PYZ, "PP": PP} # Dict to hold all the different pressure components
+        return(pressure)
 
     def reset_and_update_parameters(self):
         # Reset the simulation and initialise the parameters

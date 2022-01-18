@@ -9,7 +9,8 @@ C Parameters controlling floating point precision
       PARAMETER (DIM=3)
       INTEGER NTYPE,IKOL,IMOL,LIMOL,NPART2,NLP,LATT
       REAL(kind=prec) DPXY,DPXZ,DPYZ,DAL,DPB,DBETA,DF
-      REAL(kind=prec) X,Y,Z,XEQ,YEQ,ZEQ,DXD,PX,PY,PZ,FX,FY,FZ,CONSER
+      REAL(kind=prec) X,Y,Z,X0,Y0,Z0,XEQ,YEQ,ZEQ,DXD
+      REAL(kind=prec) PX,PY,PZ,FX,FY,FZ,CONSER
       REAL(kind=prec) FXF,FYF,FZF,FXW,FYW,FZW
       REAL(kind=prec) TR,E0,UPOT,UWALL,PT,PTF,DRW,DRF,RCUT,EPS12
       REAL(kind=prec) EPS1,EPS2,MIX
@@ -44,7 +45,8 @@ C Parameters controlling floating point precision
       COMMON/IPARM/ MAXTAU,NON,NPLOT,ISEED,NGAUS,KB,PTAU,BINS,
      &              EQTIM,NCYC,NTYPE,JFLAG,NPRINT,LATT,TAUNBINS
       COMMON/COORD/ X(NP),Y(NP),Z(NP),XEQ(NP),YEQ(NP),ZEQ(NP),DXD,
-     &              QVOL,DF
+     &              QVOL,DF,
+     &              X0(NP),Y0(NP),Z0(NP)
       COMMON/MOMENT/ PX(NP),PY(NP),PZ(NP)
       COMMON/FORSE/ FX(NP),FY(NP),FZ(NP),FXF(NP),FYF(NP),FZF(NP)
       COMMON/FORSE/ FXW(NP),FYW(NP),FZW(NP)

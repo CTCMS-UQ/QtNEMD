@@ -260,7 +260,10 @@ C
 C***** NTYPE=1  INITIAL FROM FCC
 C
          CALL FCC
-
+C Store initial particle positions for mean-square displacement calculations
+         X0 = X
+         Y0 = Y
+         Z0 = Z
 C
 C***** CHECK ALL FLUID PARTICLES ARE PART OF A MOLECULE
 C        IF (MOD(NFLUID,LIMOL).NE.0.0D0) THEN
@@ -339,14 +342,13 @@ C
       REAL (KIND=prec) PP,PPF,PXY,PXZ,PYZ,JX,JY,JZ,JXL,JYL,JZL
       REAL (KIND=prec) VX,VY,VZ,VXL,VYL,VZL
       REAL (KIND=prec) VVX,VVY,VVZ,VVXL,VVYL,VVZL,VVXLL,VVYLL,
-     &                 VVZLL,XR(NP),YR(NP),ZR(NP),X0(NP),Y0(NP),Z0(NP)    
-      REAL (KIND=prec) MSDXL, MSDYL, MSDZL
+     &                 VVZLL,XR(NP),YR(NP),ZR(NP)
       REAL (KIND=prec) PX3,PXYF,PXZF,PYZF,P2,NTOTE
-      REAL (KIND=prec) DISS,DISSFN,PTK(3,3),PTKF(3,3) 
       INTEGER TMAX,K,NINBIN,NINBINL,NINBIN0L
 C
-      TAUAV = 0.0D0
-
+      MSDX = 0.0D0
+      MSDY = 0.0D0
+      MSDZ = 0.0D0
 C Turn on the field as appropriate
       IF (IFLAG .EQ. 0) THEN
         FIELD = 0.0D0
@@ -392,9 +394,6 @@ C
 
             PX3 = PX3+PX(I)**3
 
-            X0(I) = X(I)
-            Y0(I) = Y(I)
-            Z0(I) = Z(I)
  81   CONTINUE
 
          KTRAN = KTRAN/(DF/2.0D0)
@@ -470,15 +469,22 @@ C***** KINETIC PART OF AVERAGES
                   SL(I) = 1.0D0
               ENDIF 
 
-             X0(I) = X(I)
-             Y0(I) = Y(I)
-             Z0(I) = Z(I)
+             MSDX = MSDX + (X(I) - X0(I))**2
+             MSDY = MSDX + (Y(I) - Y0(I))**2
+             MSDZ = MSDX + (Z(I) - Z0(I))**2
  1          CONTINUE
-
-             DO I=0,TAUNBINS 
-             TAUDENS1(I) = TAUDENS1(I)/(KPROP*CUBEZ*CUBEY)
-             TAUDENS2(I) = TAUDENS2(I)/(KPROP*CUBEZ*CUBEY)
-             ENDDO
+            MSDX = MSDX / (REAL(NPART, prec))
+            MSDY = MSDY / (REAL(NPART, prec))
+            MSDZ = MSDZ / (REAL(NPART, prec))
+C*********** Pressure
+         PXY   = 0.5D0*(PT(1,2)+PT(2,1))
+         PXZ   = 0.5D0*(PT(1,3)+PT(3,1))
+         PYZ   = 0.5D0*(PT(2,3)+PT(3,2))
+         PXYF   = 0.5D0*(PTF(1,2)+PTF(2,1))
+         PXZF   = 0.5D0*(PTF(1,3)+PTF(3,1))
+         PYZF   = 0.5D0*(PTF(2,3)+PTF(3,2))
+         PP    = 0.5D0*(PT(1,1)+PT(2,2)+PT(3,3))/3
+         PPF   = 0.5D0*(PTF(1,1)+PTF(2,2)+PTF(3,3))/3
 C********** ISTEP
       END DO
 C
@@ -1017,6 +1023,7 @@ C
       FY = 0.0D0
       FZ = 0.0D0
       RIJ_HIST = 0.D0
+      PT = 0.0D0
 
 C***** This is the number to sort the particle pairs' radial separations into the correct histogram bins
       RBIN_INV = 1.D0 / (RMAX/REAL(NBINS))
@@ -1203,7 +1210,16 @@ C***** Force calculation starts here
          FX(J)  = FX(J) - FIJX
          FY(J)  = FY(J) - FIJY
          FZ(J)  = FZ(J) - FIJZ
-
+C******* Update the elements of the pressure tensor
+         PT(1,1) = PT(1,1) + RX*FIJX
+         PT(1,2) = PT(1,2) + RX*FIJY
+         PT(1,3) = PT(1,3) + RX*FIJZ
+         PT(2,1) = PT(2,1) + RY*FIJX
+         PT(2,2) = PT(2,2) + RY*FIJY
+         PT(2,3) = PT(2,3) + RY*FIJZ
+         PT(3,1) = PT(3,1) + RZ*FIJX
+         PT(3,2) = PT(3,2) + RZ*FIJY
+         PT(3,3) = PT(3,3) + RZ*FIJZ
  61   CONTINUE
   3   CONTINUE
  21   CONTINUE

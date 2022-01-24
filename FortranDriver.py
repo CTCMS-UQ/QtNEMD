@@ -193,7 +193,7 @@ class MDInterface:
         msdx = TTCF.count.msdx
         msdy = TTCF.count.msdy
         msdz = TTCF.count.msdz
-        return((msdx, msdy, msdz))
+        return((float(msdx), float(msdy), float(msdz)))
 
     # The backend actually calculates and stores the pressure tensor, so we need to do some processing
     # to get it into the right form for output

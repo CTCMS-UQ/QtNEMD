@@ -80,9 +80,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pos_data = self.ui.plot_window.plot(self.md.x, self.md.y, pen=None, symbol='o')
 
         # Now do the g(2) radial-distribution function
-        rdf_compute = self.md.rdf_compute()
-        r = rdf_compute['r']
-        rdf = rdf_compute['rdf']
+        compute_rdf = self.md.compute_rdf()
+        r = compute_rdf['r']
+        rdf = compute_rdf['rdf']
         self.ui.rdf_window.setXRange(0, max(r)+1)
         self.ui.rdf_window.setYRange(0, max(rdf)+1)
         self.ui.rdf_window.setBackground('w')
@@ -153,9 +153,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pos_data.setData(self.md.x, self.md.y)  # Update the data.
 
         # Now do the g(2) radial-distribution function
-        rdf_compute = self.md.rdf_compute()
-        r = rdf_compute['r']
-        rdf = rdf_compute['rdf']
+        compute_rdf = self.md.compute_rdf()
+        r = compute_rdf['r']
+        rdf = compute_rdf['rdf']
         self.ui.rdf_window.setXRange(0, max(r)+1)
         self.ui.rdf_window.setYRange(0, max(rdf)+1)
         self.rdf_data.setData(r, rdf)

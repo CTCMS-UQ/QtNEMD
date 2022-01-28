@@ -183,9 +183,13 @@ class MDInterface:
     # Radial distribution function. This returns into two arrays for r and g(2)(r), stored as a tuple
     def compute_rdf(self):
         # RDF already computed by Fortran backend during Force calculation, just need to normalise it
-        rdf = self.vol / (self.npart**2) * TTCF.averg.rij_hist[np.nonzero(TTCF.averg.rij_hist)]
+        rdf = self.vol / (2*np.pi*self.npart**2) * TTCF.averg.rij_hist[np.nonzero(TTCF.averg.rij_hist)]
         # Now calculate the bin coordinates
         r = np.array([i/TTCF.averg.rbin_inv for i in range(len(rdf))])
+        # Finally, divide through by the width of each successive shell to normalise the probability
+        for i in range(1,len(r)):
+            rn = (i - 0.5)*(r[i] - r[i-1])
+            rdf[i] = rdf[i]/rn
         return({'r': r, 'rdf': rdf})
 
     # Mean-square displacement

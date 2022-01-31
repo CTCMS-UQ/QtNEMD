@@ -182,6 +182,9 @@ C
       M1 = 0.0D0
       M2 = 0.0D0
       M3 = 0.0D0
+      XR = 0.0_prec
+      YR = 0.0_prec
+      ZR = 0.0_prec
 C
 C***** SET INITIAL VALUES
 C      RCUT SET TO 2**(1/6) FOR WCA POTENTIAL
@@ -342,7 +345,7 @@ C
       REAL (KIND=prec) PP,PPF,PXY,PXZ,PYZ,JX,JY,JZ,JXL,JYL,JZL
       REAL (KIND=prec) VX,VY,VZ,VXL,VYL,VZL
       REAL (KIND=prec) VVX,VVY,VVZ,VVXL,VVYL,VVZL,VVXLL,VVYLL,
-     &                 VVZLL,XR(NP),YR(NP),ZR(NP)
+     &                 VVZLL
       REAL (KIND=prec) PX3,PXYF,PXZF,PYZF,P2,NTOTE
       INTEGER TMAX,K,NINBIN,NINBINL,NINBIN0L
 C
@@ -469,25 +472,43 @@ C***** KINETIC PART OF AVERAGES
                   SL(I) = 1.0D0
               ENDIF 
 
-             MSDX = MSDX + (X(I) - X0(I))**2
-             MSDY = MSDX + (Y(I) - Y0(I))**2
-             MSDZ = MSDX + (Z(I) - Z0(I))**2
+C*********** Unwrap PBCs before calculating MSD 
+            XR(I) = XR(I)+X(I)-X0(I) - ANINT((X(I)-X0(I))/CUBEX)*CUBEX
+            YR(I) = YR(I)+Y(I)-Y0(I) - ANINT((Y(I)-Y0(I))/CUBEY)*CUBEY
+            ZR(I) = ZR(I)+Z(I)-Z0(I) - ANINT((Z(I)-Z0(I))/CUBEZ)*CUBEZ
+
+            MSDX = MSDX + (XR(I))**2
+            MSDY = MSDX + (YR(I))**2
+            MSDZ = MSDX + (ZR(I))**2
  1          CONTINUE
-            MSDX = MSDX / (REAL(NPART, prec))
-            MSDY = MSDY / (REAL(NPART, prec))
-            MSDZ = MSDZ / (REAL(NPART, prec))
+        MSDX = MSDX / (REAL(NPART, prec))
+        MSDY = MSDY / (REAL(NPART, prec))
+        MSDZ = MSDZ / (REAL(NPART, prec))
 C*********** Pressure
-         PXY   = 0.5D0*(PT(1,2)+PT(2,1))
-         PXZ   = 0.5D0*(PT(1,3)+PT(3,1))
-         PYZ   = 0.5D0*(PT(2,3)+PT(3,2))
-         PXYF   = 0.5D0*(PTF(1,2)+PTF(2,1))
-         PXZF   = 0.5D0*(PTF(1,3)+PTF(3,1))
-         PYZF   = 0.5D0*(PTF(2,3)+PTF(3,2))
-         PP    = 0.5D0*(PT(1,1)+PT(2,2)+PT(3,3))/3
-         PPF   = 0.5D0*(PTF(1,1)+PTF(2,2)+PTF(3,3))/3
+        PXY   = 0.5D0*(PT(1,2)+PT(2,1))
+        PXZ   = 0.5D0*(PT(1,3)+PT(3,1))
+        PYZ   = 0.5D0*(PT(2,3)+PT(3,2))
+        PXYF   = 0.5D0*(PTF(1,2)+PTF(2,1))
+        PXZF   = 0.5D0*(PTF(1,3)+PTF(3,1))
+        PYZF   = 0.5D0*(PTF(2,3)+PTF(3,2))
+        PP    = 0.5D0*(PT(1,1)+PT(2,2)+PT(3,3))/3
+        PPF   = 0.5D0*(PTF(1,1)+PTF(2,2)+PTF(3,3))/3
 C********** ISTEP
       END DO
 C
+C      DO I = 1, NPART
+C*********** Unwrap PBCs before calculating MSD 
+C        XR(I) = XR(I)+X(I)-X0(I) - ANINT((X(I)-X0(I))/CUBEX)*CUBEX
+C        YR(I) = YR(I)+Y(I)-Y0(I) - ANINT((Y(I)-Y0(I))/CUBEY)*CUBEY
+C        ZR(I) = ZR(I)+Z(I)-Z0(I) - ANINT((Z(I)-Z0(I))/CUBEZ)*CUBEZ
+C
+C        MSDX = MSDX + (XR(I))**2
+C        MSDY = MSDX + (YR(I))**2
+C        MSDZ = MSDX + (ZR(I))**2
+C      END DO        
+C      MSDX = MSDX / (REAL(NPART, prec))
+C      MSDY = MSDY / (REAL(NPART, prec))
+C      MSDZ = MSDZ / (REAL(NPART, prec))
  55   FORMAT(I12,7F9.5)
  75   FORMAT(I12,7F9.5)
  65   FORMAT(6E14.6)
@@ -1025,8 +1046,6 @@ C
       RIJ_HIST = 0.D0
       PT = 0.0D0
 
-C***** This is the number to sort the particle pairs' radial separations into the correct histogram bins
-      RBIN_INV = 1.D0 / (RMAX/REAL(NBINS))
 
 C***** DEFINE USEFUL TERMS
 C
@@ -1040,12 +1059,17 @@ C
         NCELLY     = INT(CUBEY/R0)
         NCELLZ     = INT(CUBEZ/R0)
         ROUT2      = R0**2
+C***** This is the number to sort the particle pairs' radial separations into the correct histogram bins
+        RBIN_INV = 1.0_prec / (R0/REAL(NBINS))
       ELSE
         NCELLX     = INT(CUBEX/RCUT)
         NCELLY     = INT(CUBEY/RCUT)
         NCELLZ     = INT(CUBEZ/RCUT)
         ROUT2      = RMAX
+C***** This is the number to sort the particle pairs' radial separations into the correct histogram bins
+        RBIN_INV = 1.0_prec / (RCUT/REAL(NBINS))
       ENDIF 
+
 
 C
 C      IF (NCELLX.LT.3) STOP 'Do not use cell code, NCELLX<3'

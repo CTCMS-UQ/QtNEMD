@@ -347,6 +347,7 @@ C
       REAL (KIND=prec) VVX,VVY,VVZ,VVXL,VVYL,VVZL,VVXLL,VVYLL,
      &                 VVZLL
       REAL (KIND=prec) PX3,PXYF,PXZF,PYZF,P2,NTOTE
+      REAL (KIND=prec) RINIT, RR(NP)
       INTEGER TMAX,K,NINBIN,NINBINL,NINBIN0L
 C
       MSDX = 0.0D0
@@ -463,7 +464,7 @@ C
             KB=KB+1
 C
 C***** KINETIC PART OF AVERAGES
-          DO 1 I = 1, NPART
+          DO I = 1, NPART
                SL(I) = 0.0D0
                KTRAN = KTRAN + PY(I)**2
                KENER = KENER + (PX(I)**2+PY(I)**2+PZ(I)**2)/2.D0
@@ -473,17 +474,21 @@ C***** KINETIC PART OF AVERAGES
               ENDIF 
 
 C*********** Unwrap PBCs before calculating MSD 
-            XR(I) = XR(I)+X(I)-X0(I) - ANINT((X(I)-X0(I))/CUBEX)*CUBEX
-            YR(I) = YR(I)+Y(I)-Y0(I) - ANINT((Y(I)-Y0(I))/CUBEY)*CUBEY
-            ZR(I) = ZR(I)+Z(I)-Z0(I) - ANINT((Z(I)-Z0(I))/CUBEZ)*CUBEZ
+            XR(I) = X(I) + ANINT((XR(I)-X(I))/CUBEX)*CUBEX
+            YR(I) = Y(I) + ANINT((YR(I)-Y(I))/CUBEY)*CUBEY
+            ZR(I) = Z(I) + ANINT((ZR(I)-Z(I))/CUBEZ)*CUBEZ
+            RR(I) = SQRT(XR(I)**2 + YR(I)**2 + ZR(I)**2)
+            RINIT = SQRT(X0(I)**2 + Y0(I)**2 + Z0(I)**2)
 
-            MSDX = MSDX + (XR(I))**2
-            MSDY = MSDX + (YR(I))**2
-            MSDZ = MSDX + (ZR(I))**2
- 1          CONTINUE
+            MSDX = MSDX + (XR(I) - X0(I))**2
+            MSDY = MSDY + (YR(I) - Y0(I))**2
+            MSDZ = MSDZ + (ZR(I) - Z0(I))**2
+            MSD = MSD + (RR(I) - RINIT)**2
+          END DO
         MSDX = MSDX / (REAL(NPART, prec))
         MSDY = MSDY / (REAL(NPART, prec))
         MSDZ = MSDZ / (REAL(NPART, prec))
+        MSD  = MSD / (REAL(NPART, prec))
 C*********** Pressure
         PXY   = 0.5D0*(PT(1,2)+PT(2,1))
         PXZ   = 0.5D0*(PT(1,3)+PT(3,1))

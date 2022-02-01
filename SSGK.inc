@@ -23,7 +23,7 @@ C Parameters controlling floating point precision
       INTEGER KOUNT,NMEAN,NTAUAV,NPLOT,KB,JFLAG,NPRINT
       INTEGER NPART,MAXTAU,NON,PTAU,EQTIM,NCYC,TAUNBINS
       REAL(kind=prec) ALPH,ALPHB,VOL,VOLF,MEAN,TCF,INTCF
-      REAL(kind=prec) MSDX,MSDY,MSDZ 
+      REAL(kind=prec) MSDX,MSDY,MSDZ, MSD
       REAL(kind=prec) TAUAV,TAUAVL,T0,T0L,T0V
       REAL(kind=prec) M0,M1,M2,M3,M4,M5,KE2,E00,NHALPH
       REAL(kind=prec) XSAV,YSAV,ZSAV,PXSAV,PYSAV,PZSAV,DXDSAV,UPOTSAV
@@ -67,7 +67,7 @@ C Parameters controlling floating point precision
       COMMON/IRANDI/ ISEED1
       COMMON/NUMAV/ KOUNT(0:NK),NMEAN,NTAUAV
       COMMON/COUNT/ T0(DIM),TCF(0:NK,NTCF),T0V(NP,DIM),
-     &              MSDX,MSDY,MSDZ,
+     &              MSDX,MSDY,MSDZ, MSD, 
      &              TCF1(0:NK,NTCF),INTCF1(0:NK,NTCF),T0L(DIM),
      &              TCFL(0:NK,0:NBINS,NTCF),INTCFL(0:NK,0:NBINS,NTCF), 
      &              INTCF(0:NK,NTCF),DISSL(0:NBINS), 

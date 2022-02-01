@@ -83,8 +83,8 @@ class MainWindow(QtWidgets.QMainWindow):
         compute_rdf = self.md.compute_rdf()
         r = compute_rdf['r']
         rdf = compute_rdf['rdf']
-        self.ui.rdf_window.setXRange(0, max(r)+1)
-        self.ui.rdf_window.setYRange(0, max(rdf)+1)
+        self.ui.rdf_window.setXRange(0, max(r))
+        self.ui.rdf_window.setYRange(0, max(rdf))
         self.ui.rdf_window.setBackground('w')
         self.rdf_data = self.ui.rdf_window.plot(r[1:], rdf[1:], color='k')
 
@@ -156,8 +156,8 @@ class MainWindow(QtWidgets.QMainWindow):
         compute_rdf = self.md.compute_rdf()
         r = compute_rdf['r']
         rdf = compute_rdf['rdf']
-        self.ui.rdf_window.setXRange(0, max(r)+1)
-        self.ui.rdf_window.setYRange(0, max(rdf)+1)
+        self.ui.rdf_window.setXRange(0, max(r))
+        self.ui.rdf_window.setYRange(0, max(rdf))
         self.rdf_data.setData(r, rdf)
 
     def update_GUI_elements(self):

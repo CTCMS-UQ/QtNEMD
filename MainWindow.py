@@ -97,7 +97,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.lj_eps_spinbox.setValue(self.md.eps)
         self.ui.field_spinbox.setValue(self.md.fieldstrength)
         self.ui.temp_spinbox.setValue(self.md.temp)
-        self.ui.density_spinbox.setValue(self.md.reduced_density)
+        self.ui.density_spinbox.setValue(self.md.density)
 
     def update_parameters(self):
         # Get the widget which sent this signal, as well as its new value
@@ -117,7 +117,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.md.temp = value
 
         elif sender == self.ui.density_spinbox:
-            self.md.reduced_density = value
+            self.md.density = value
             # The density is controlled by changing the box size and keeping NPART constant, so
             # we need to adjust the plot window's range
             bounds = self.md.box_bounds

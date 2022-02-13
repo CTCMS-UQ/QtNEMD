@@ -15,14 +15,14 @@ class MDInterface:
         self._drf    = 1.0
         self._delta  = 5.0E-003
         self._latt   = 1
-        self._npart  = 500
+        self._npart  = 1372
 
         self._fe0    = 1.0
         self._rcut   = 2.5
         self._kh     = 1
         self._nprint = 100
 
-        self._mix    = 0.2
+        self._mix    = 1.0
         self._eps1   = 1
         self._eps2   = 1
         self._qvol   = 100
@@ -70,10 +70,10 @@ class MDInterface:
         self.reset_and_update_parameters()
 
     @property
-    def reduced_density(self):
+    def density(self):
         return(self._drf)
-    @reduced_density.setter
-    def reduced_density(self, value):
+    @density.setter
+    def density(self, value):
         self._drf=value
         self.reset_and_update_parameters()
 
@@ -193,10 +193,8 @@ class MDInterface:
 
     # Mean-square displacement
     def compute_msd(self):
-        msdx = TTCF.count.msdx
-        msdy = TTCF.count.msdy
-        msdz = TTCF.count.msdz
-        return((float(msdx), float(msdy), float(msdz)))
+        msd = TTCF.count.msd
+        return(msd)
 
     # The backend actually calculates and stores the pressure tensor, so we need to do some processing
     # to get it into the right form for output

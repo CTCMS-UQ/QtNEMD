@@ -89,10 +89,8 @@ class DriverSmokeTest(unittest.TestCase):
         self.assertAlmostEqual(np.sum(pz_start), np.sum(pz_end))
 
         # Ensure mean-squared displacement is nonzero
-        msdx, msdy, msdz = self.md.compute_msd()
-        self.assertGreater(msdx, 0.0)
-        self.assertGreater(msdy, 0.0)
-        self.assertGreater(msdz, 0.0)
+        msd = self.md.compute_msd()
+        self.assertGreater(msd, 0.0)
 
 if __name__ == '__main__':
     unittest.main()

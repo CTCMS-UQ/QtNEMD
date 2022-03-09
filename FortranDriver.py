@@ -161,7 +161,7 @@ class MDInterface:
         # whenever we restart the simulation.
         self.update_parameters()
         TTCF.setup()
-        TTCF.md(1, 0)
+        TTCF.md(1, 0, equilibriate=True)
 
         # Zero array for g(2) RDF
         self.delta_r = np.zeros([self.npart, self.npart])
@@ -353,7 +353,7 @@ NPLOT,MAXTAU,EQTIM,NCYC"""
 
     def run(self, nsteps):
         # First, advance the simulation
-        TTCF.md(nsteps, self._iflag)
+        TTCF.md(nsteps, self._iflag, equilibriate=True)
 
         # Now update all of our thermodynamic parameters with values from LAMMPS
         self.get_params_from_TTCF()

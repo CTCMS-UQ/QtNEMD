@@ -37,7 +37,7 @@ C Parameters controlling floating point precision
       REAL(kind=prec) TAUDENS1,TAUDENS2
       REAL(kind=prec) TEMP,TOTE
       INTEGER RIJ_HIST
-      REAL RBIN_INV
+      REAL(kind=prec) RBIN_INV
       LOGICAL DO_PRESSURE
 
       INTEGER NENAV

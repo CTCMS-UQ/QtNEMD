@@ -15,13 +15,13 @@ md.npart = 500
 #md.density=0.6
 ## Triple-point
 md.temp = 0.8
-md.density=0.8
+md.density = 0.8
 ## Gas
 #md.temp = 4.0
 #md.density=0.3
 
 # Equilibriate
-t_eq = 5000
+t_eq = 500
 md.run(t_eq)
 #md.fieldstrength = 3.0
 #md.toggle_nemd()

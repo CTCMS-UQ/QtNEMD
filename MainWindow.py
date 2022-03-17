@@ -81,12 +81,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Now do the g(2) radial-distribution function
         compute_rdf = self.md.compute_rdf()
-        r = compute_rdf['r']
-        rdf = compute_rdf['rdf']
-        self.ui.rdf_window.setXRange(0, max(r))
-        self.ui.rdf_window.setYRange(0, max(rdf))
-        self.ui.rdf_window.setBackground('w')
-        self.rdf_data = self.ui.rdf_window.plot(r[1:], rdf[1:], color='k')
+        #r = compute_rdf['r']
+        #rdf = compute_rdf['rdf']
+        #self.ui.rdf_window.setXRange(0, max(r))
+        #self.ui.rdf_window.setYRange(0, max(rdf))
+        #self.ui.rdf_window.setBackground('w')
+        #self.rdf_data = self.ui.rdf_window.plot(r[1:], rdf[1:], color='k')
 
         # Initialise the N, V and T labels
         self.ui.npart_label.setText(f"N particles = {self.md.npart}")
@@ -96,7 +96,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Finally, set the simulation controls to the correct value
         self.ui.lj_eps_spinbox.setValue(self.md.eps)
         self.ui.field_spinbox.setValue(self.md.fieldstrength)
-        self.ui.temp_spinbox.setValue(self.md.temp)
+        self.ui.temp_spinbox.setValue(self.md._tr)
         self.ui.density_spinbox.setValue(self.md.density)
 
     def update_parameters(self):
@@ -153,12 +153,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pos_data.setData(self.md.x, self.md.y)  # Update the data.
 
         # Now do the g(2) radial-distribution function
-        compute_rdf = self.md.compute_rdf()
-        r = compute_rdf['r']
-        rdf = compute_rdf['rdf']
-        self.ui.rdf_window.setXRange(0, max(r))
-        self.ui.rdf_window.setYRange(0, max(rdf))
-        self.rdf_data.setData(r, rdf)
+        #compute_rdf = self.md.compute_rdf()
+        #r = compute_rdf['r']
+        #rdf = compute_rdf['rdf']
+        #self.ui.rdf_window.setXRange(0, max(r))
+        #self.ui.rdf_window.setYRange(0, max(rdf))
+        #self.rdf_data.setData(r, rdf)
 
     def update_GUI_elements(self):
         # Update the temperature and volume labels

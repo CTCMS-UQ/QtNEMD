@@ -1,7 +1,7 @@
 all:
 	# F2Py module
-	f2py3  Walls_SSGK.f -m TTCF -h TTCF.pyf --overwrite-signature 
-	f2py3 -c TTCF.pyf Walls_SSGK.f  --fcompiler=gfortran \
+	f2py3  shear.f -m TTCF -h TTCF.pyf --overwrite-signature 
+	f2py3 -c TTCF.pyf shear.f  --fcompiler=gfortran \
 	--f77flags='-Ofast -march=native -cpp' \
 	--f90flags='-Ofast -march-native -cpp'
 	# GUI elements
@@ -10,8 +10,8 @@ all:
 
 driver: 
 	# F2Py module
-	f2py3  Walls_SSGK.f -m TTCF -h TTCF.pyf --overwrite-signature 
-	f2py3 -c TTCF.pyf Walls_SSGK.f  --fcompiler=gfortran \
+	f2py3  shear.f -m TTCF -h TTCF.pyf --overwrite-signature 
+	f2py3 -c TTCF.pyf shear.f  --fcompiler=gfortran \
 	--f77flags='-Ofast -march=native -cpp' \
 	--f90flags='-Ofast -march-native -cpp'
 gui:

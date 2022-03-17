@@ -11,13 +11,14 @@ class MDInterface:
 
     def __init__(self):
         self._tr     = 1.0
-        self._drw    = 1.0
-        self._drf    = 1.0
+        self._drw    = 0.2
+        self._drf    = 0.2
         self._delta  = 5.0E-003
         self._latt   = 1
-        self._npart  = 1372
+        self._npart  = 500
 
-        self._fe0    = 1.0
+        self._fe0    = 0.0
+        self._shear = 0.0
         self._rcut   = 2.5
         self._kh     = 1
         self._nprint = 100
@@ -36,7 +37,7 @@ class MDInterface:
 
         self._ntype  = 1
         self._non    = 0
-        self._ngaus  = 4
+        self._ngaus  = 6 # Nose-Hoover thermostat
         self._e0     = 1.0
 
         self._nplot  = 1
@@ -104,6 +105,14 @@ class MDInterface:
         self.update_parameters()
 
     @property
+    def shear(self):
+        return(self._shear)
+    @shear.setter
+    def shear(self, value):
+        self._shear = value
+        self.update_parameters()
+
+    @property
     def temp(self):
         return(TTCF.averg.temp)
     @temp.setter
@@ -161,7 +170,7 @@ class MDInterface:
         # whenever we restart the simulation.
         self.update_parameters()
         TTCF.setup()
-        TTCF.md(1, 0, equilibriate=True)
+        TTCF.md(1, 0)
 
         # Zero array for g(2) RDF
         self.delta_r = np.zeros([self.npart, self.npart])
@@ -182,14 +191,15 @@ class MDInterface:
 
     # Radial distribution function. This returns into two arrays for r and g(2)(r), stored as a tuple
     def compute_rdf(self):
+        pass
         # RDF already computed by Fortran backend during Force calculation, just need to normalise it
-        rdf = self.vol / (2*np.pi*self.npart**2) * TTCF.averg.rij_hist
+#        rdf = self.vol / (2*np.pi*self.npart**2) * TTCF.averg.rij_hist
         # Now calculate the bin coordinates
-        r = np.array([(i+0.5)/TTCF.averg.rbin_inv for i in range(len(rdf))])
+        #r = np.array([(i+0.5)/TTCF.averg.rbin_inv for i in range(len(rdf))])
         # Finally, divide through by the width of each successive shell to normalise the probability
-        for i in range(1,len(r)):
-            rdf[i] = rdf[i]/(r[i]**2/TTCF.averg.rbin_inv)
-        return({'r': r, 'rdf': rdf})
+#        for i in range(1,len(r)):
+#            rdf[i] = rdf[i]/(r[i]**2/TTCF.averg.rbin_inv)
+#        return({'r': r, 'rdf': rdf})
 
     # Mean-square displacement
     def compute_msd(self):
@@ -217,6 +227,7 @@ class MDInterface:
         TTCF.nopart.npart   = self._npart
 
         TTCF.parm.fe0       = self._fe0
+        TTCF.sllod.shear    = self._shear
         TTCF.parm.rcut      = self._rcut
         TTCF.parm.kh        = self._kh
         TTCF.iparm.nprint   = self._nprint
@@ -254,6 +265,7 @@ class MDInterface:
         TTCF.nopart.npart   = self._npart
 
         TTCF.parm.fe0       = self._fe0
+        TTCF.sllod.shear    = self._shear
         TTCF.parm.rcut      = self._rcut
         TTCF.parm.kh        = self._kh
         TTCF.iparm.nprint   = self._nprint
@@ -284,10 +296,12 @@ class MDInterface:
         if(self._do_nemd):
             self._do_nemd = False
             self._iflag = 0
+            self._shear = 0.0
             self.update_parameters()
         else:
             self._do_nemd = True
             self._iflag = 1
+            self._shear = 0.05
             self.update_parameters()
 
     def format_params(self):
@@ -353,7 +367,7 @@ NPLOT,MAXTAU,EQTIM,NCYC"""
 
     def run(self, nsteps):
         # First, advance the simulation
-        TTCF.md(nsteps, self._iflag, equilibriate=True)
+        TTCF.md(nsteps, self._iflag)
 
         # Now update all of our thermodynamic parameters with values from LAMMPS
         self.get_params_from_TTCF()

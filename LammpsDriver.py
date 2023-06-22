@@ -14,9 +14,9 @@ class MDInterface:
 
         # Initialise user-variables with default values
         # These parameters require a restart when they change
-        self._xmax = 10
-        self._ymax = 10
-        self._zmax = 0.5
+        self._xmax = 4.0
+        self._ymax = 4.0
+        self._zmax = 4.0
         self._rho = 0.8442
 
         # These parameters do not require a restart when they change
@@ -175,8 +175,8 @@ class MDInterface:
         self._lmp.command(f"suffix            opt")
         self._lmp.command(f"units		        lj")
         self._lmp.command(f"atom_style	    atomic")
-        self._lmp.command(f"dimension	        2")
-        self._lmp.command(f"lattice		    sq2 {self._rho}")
+        #self._lmp.command(f"dimension	        2")
+        self._lmp.command(f"lattice		    fcc {self._rho}")
         self._lmp.command(f"region		    box prism 0 {self._xmax} 0 {self._ymax} -{self._zmax}  {self._zmax} 0 0 0")
         self._lmp.command(f"create_box	    2 box")
         self._lmp.command(f"create_atoms	    1 box")
@@ -197,30 +197,25 @@ class MDInterface:
         else:
             self._lmp.command(f"fix		    1 all nvt temp {self._temp} {self._temp} 1.0 tchain 1")
 
-        self._lmp.command(f"fix               3 all enforce2d")
 
     def update_parameters(self):
         # Only update the parameters which don't require a reset
         if self.do_nemd:
             self._lmp.command("unfix 1")
             self._lmp.command("unfix 2")
-            self._lmp.command("unfix 3")
             self._lmp.command("uncompute sllodtemp")
             
-            self._lmp.command(f"pair_coeff * * {self.e_ps} {self._sigma}")
+            self._lmp.command(f"pair_coeff * * {self._eps} {self._sigma}")
 
             self._lmp.command("compute sllodtemp all temp/deform")
             self._lmp.command("thermo_modify temp sllodtemp")
 
             self._lmp.command(f"fix 1 all nvt/sllod temp {self._temp} {self._temp} 1.0 tchain 1")
             self._lmp.command(f"fix 2 all deform 1 xy erate {self._flowrate} remap v")
-            self._lmp.command(f"fix 3 all enforce2d")
         else:
             self._lmp.command("unfix 1")
-            self._lmp.command("unfix 3")
             self._lmp.command(f"pair_coeff * * {self._eps} {self._sigma}")
             self._lmp.command(f"fix 1 all nvt temp {self._temp} {self._temp} 1.0 tchain 1")
-            self._lmp.command(f"fix 3 all enforce2d")
 
     def toggle_nemd(self):
         # Toggle NEMD field on or off. This needs to be a separate function to update_parameters() since
@@ -231,15 +226,12 @@ class MDInterface:
         if self._do_nemd:
             self._lmp.command("unfix 1")
             self._lmp.command("unfix 2")
-            self._lmp.command("unfix 3")
             self._lmp.command("uncompute sllodtemp")
-            self.do_nemd = False
+            self._do_nemd = False
 
             self._lmp.command(f"fix 1 all nvt temp {self._temp} {self._temp} 1.0 tchain 1")
-            self._lmp.command(f"fix 3 all enforce2d")            
         else:
             self._lmp.command("unfix 1")
-            self._lmp.command("unfix 3")
             self._do_nemd = True
 
             self._lmp.command("compute sllodtemp all temp/deform")
@@ -247,7 +239,6 @@ class MDInterface:
 
             self._lmp.command(f"fix 1 all nvt/sllod temp {self._temp} {self._temp} 1.0 tchain 1")
             self._lmp.command(f"fix 2 all deform 1 xy erate {self._flowrate} remap v")
-            self._lmp.command(f"fix 3 all enforce2d")
 
     def format_params(self):
         """ Make a format string for the input which can be either written to file or displayed in Qt."""
@@ -255,8 +246,8 @@ class MDInterface:
         # Write the input parameters, making sure to preserve whitespace and newlines
         param_str  =        f"""units lj"""
         param_str +=        f"""\natom_style atomic"""
-        param_str +=        f"""\ndimension 2"""
-        param_str +=        f"""\nlattice sq2 {self._rho}"""
+        param_str +=        f"""\ndimension 3"""
+        param_str +=        f"""\nlattice fcc {self._rho}"""
         param_str +=        f"""\nregion box prism 0 {self._xmax} 0 {self._ymax} -{self._zmax}  {self._zmax} 0 0 0"""
         param_str +=        f"""\ncreate_box 2 box"""
         param_str +=        f"""\ncreate_atoms 1 box"""
@@ -276,7 +267,6 @@ class MDInterface:
         else:
             param_str +=    f"""\nfix 1 all nvt temp {self._temp} {self._temp} 1.0 tchain 1"""
 
-        param_str +=        f"""\nfix 3 all enforce2d\n"""
 
 
         return(param_str)

@@ -4,9 +4,9 @@ class InputManager:
     def __init__(self):
         # Initialise with default values
         # Particle data
-        self.xmax = 10
-        self.ymax = 10
-        self.zmax = 0.5
+        self.xmax = 4.0
+        self.ymax = 4.0
+        self.zmax = 4.0
         self.reduced_density = 0.8442
         self.sigma = 1.0
         self.eps = 1.0
@@ -26,8 +26,8 @@ class InputManager:
         lmp.command(f"suffix            opt")
         lmp.command(f"units		        lj")
         lmp.command(f"atom_style	    atomic")
-        lmp.command(f"dimension	        2")
-        lmp.command(f"lattice		    sq2 {self.reduced_density}")
+        lmp.command(f"dimension	        3")
+        lmp.command(f"lattice		    fcc {self.reduced_density}")
         lmp.command(f"region		    box prism 0 {self.xmax} 0 {self.ymax} -{self.zmax}  {self.zmax} 0 0 0")
         lmp.command(f"create_box	    2 box")
         lmp.command(f"create_atoms	    1 box")
@@ -48,14 +48,11 @@ class InputManager:
         else:
             lmp.command(f"fix		    1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
 
-        lmp.command(f"fix               3 all enforce2d")
-
     def update_parameters(self, lmp):
         # Only update the parameters which don't require a reset
         if self.do_nemd:
             lmp.command("unfix 1")
             lmp.command("unfix 2")
-            lmp.command("unfix 3")
             lmp.command("uncompute sllodtemp")
             
             lmp.command(f"pair_coeff * * {self.eps} {self.sigma}")
@@ -68,7 +65,6 @@ class InputManager:
             lmp.command(f"fix 3 all enforce2d")
         else:
             lmp.command("unfix 1")
-            lmp.command("unfix 3")
             lmp.command(f"pair_coeff * * {self.eps} {self.sigma}")
             lmp.command(f"fix 1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
             lmp.command(f"fix 3 all enforce2d")
@@ -82,7 +78,6 @@ class InputManager:
         if self.do_nemd:
             lmp.command("unfix 1")
             lmp.command("unfix 2")
-            lmp.command("unfix 3")
             lmp.command("uncompute sllodtemp")
             self.do_nemd = False
 
@@ -90,7 +85,6 @@ class InputManager:
             lmp.command(f"fix 3 all enforce2d")            
         else:
             lmp.command("unfix 1")
-            lmp.command("unfix 3")
             self.do_nemd = True
 
             lmp.command("compute sllodtemp all temp/deform")

@@ -24,7 +24,7 @@ class MDInterface:
         self._eps= 1.0
 
         self._flowrate = 0.001
-        self._temp = 1.0
+        self._temp = 1.44
         self._do_nemd = False
 
         # LJ cutoff parameter. This is just to aid in plotting, probably don't want to change this
@@ -186,8 +186,8 @@ class MDInterface:
         self._lmp.command(f"set		        region slice type 2")
         self._lmp.command(f"pair_style	    lj/cut {self._rcut}")
         self._lmp.command(f"pair_coeff	    * * {self._eps} {self._sigma}")
-        self._lmp.command(f"neighbor	        0.3 bin")
-        self._lmp.command(f"neigh_modify	    delay 0 every 1")
+        #self._lmp.command(f"neighbor	        0.3 bin")
+        #self._lmp.command(f"neigh_modify	    delay 0 every 1")
         self._lmp.command("compute            g2 all rdf 100")
         if self.do_nemd:
             self._lmp.command("compute        sllodtemp all temp/deform")
@@ -257,8 +257,8 @@ class MDInterface:
         param_str +=        f"""\nset region slice type 2"""
         param_str +=        f"""\npair_style lj/cut 2.5"""
         param_str +=        f"""\npair_coeff * * {self._eps} {self._sigma} 1.0"""
-        param_str +=        f"""\nneighbor 0.3 bin"""
-        param_str +=        f"""\nneigh_modify 0 every 1"""
+        #param_str +=        f"""\nneighbor 0.3 bin"""
+        #param_str +=        f"""\nneigh_modify 0 every 1"""
         if self.do_nemd:
             param_str +=    f"""\ncompute all temp/deform"""
             param_str +=    f"""\nthermo_modify temp sllodtemp"""

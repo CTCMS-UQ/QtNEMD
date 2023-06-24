@@ -2,7 +2,6 @@ from PyQt5 import QtWidgets, QtCore
 import pyqtgraph as pg
 import sys 
 import os
-import InputManager
 import LammpsDriver
 
 sys.path.append("GUI-resources")

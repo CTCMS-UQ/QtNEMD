@@ -18,8 +18,8 @@ class MDInterface:
         self._npart  = 500
 
         self._fe0    = 0.0
-        self._shear = 0.0
-        self._rcut   = 2.5
+        self._shear  = 0.0
+        self._rcut   = 1.5
         self._kh     = 1
         self._nprint = 100
 
@@ -37,7 +37,7 @@ class MDInterface:
 
         self._ntype  = 1
         self._non    = 0
-        self._ngaus  = 6 # Nose-Hoover thermostat
+        self._ngaus  = 4 # Gaussian isokinetic thermostat
         self._e0     = 1.0
 
         self._nplot  = 1
@@ -300,8 +300,8 @@ class MDInterface:
             self.update_parameters()
         else:
             self._do_nemd = True
-            self._iflag = 1
-            self._shear = 0.05
+            self._iflag = 0
+            self._shear = 0.005
             self.update_parameters()
 
     def format_params(self):

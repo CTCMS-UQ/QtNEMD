@@ -12,7 +12,7 @@ class InputManager:
         self.eps = 1.0
 
         # Simulation parameters
-        self.flowrate = 0.1
+        self.flowrate = 0.001
         self.temp = 1.0
         self.do_nemd = False
 
@@ -62,12 +62,10 @@ class InputManager:
 
             lmp.command(f"fix 1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1")
             lmp.command(f"fix 2 all deform 1 xy erate {self.flowrate} remap v")
-            lmp.command(f"fix 3 all enforce2d")
         else:
             lmp.command("unfix 1")
             lmp.command(f"pair_coeff * * {self.eps} {self.sigma}")
             lmp.command(f"fix 1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
-            lmp.command(f"fix 3 all enforce2d")
 
     def toggle_nemd(self, lmp):
         # Toggle NEMD field on or off. This needs to be a separate function to update_parameters() since
@@ -82,7 +80,6 @@ class InputManager:
             self.do_nemd = False
 
             lmp.command(f"fix 1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1")
-            lmp.command(f"fix 3 all enforce2d")            
         else:
             lmp.command("unfix 1")
             self.do_nemd = True
@@ -92,7 +89,6 @@ class InputManager:
 
             lmp.command(f"fix 1 all nvt/sllod temp {self.temp} {self.temp} 1.0 tchain 1")
             lmp.command(f"fix 2 all deform 1 xy erate {self.flowrate} remap v")
-            lmp.command(f"fix 3 all enforce2d")
 
     def format_params(self):
         """ Make a format string for the input which can be either written to file or displayed in Qt."""
@@ -120,8 +116,6 @@ class InputManager:
             param_str +=    f"""\nfix 2 all deform 1 xy erate {self.flowrate} remap v"""
         else:
             param_str +=    f"""\nfix 1 all nvt temp {self.temp} {self.temp} 1.0 tchain 1"""
-
-        param_str +=        f"""\nfix 3 all enforce2d\n"""
 
 
         return(param_str)

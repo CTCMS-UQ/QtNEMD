@@ -23,7 +23,7 @@ class MDInterface:
         self._sigma = 1.0
         self._eps= 1.0
 
-        self._flowrate = 0.1
+        self._flowrate = 0.001
         self._temp = 1.0
         self._do_nemd = False
 
@@ -109,7 +109,7 @@ class MDInterface:
         self._temp = value
         self.update_parameters()
     
-    # Get the status of whether we're doing nonequilubrium calculations. No setter, since this is handled by toggle_nemd()
+    # Get the status of whether we're doing nonequilibrium calculations. No setter, since this is handled by toggle_nemd()
     @property
     def do_nemd(self):
         return(self._do_nemd)

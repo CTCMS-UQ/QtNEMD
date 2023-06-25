@@ -14,6 +14,7 @@ You'll need the following software packages installed on your computer:
   4) `make` (the software has been tested on Gnu Make, but other dialects may work)
   5) The `g++` compiler
   6) CMake
+  7) Qt5
 
 ## Automatic installation
 There is an `install.sh` script in the top-level directory which *should* automatically install all

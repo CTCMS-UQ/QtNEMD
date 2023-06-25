@@ -10,29 +10,49 @@ This project is currently a work in progress, bug reports and feature requests w
 You'll need the following software packages installed on your computer:
   1) Python 3
   2) The `pip` python package manager (usually bundled with your python distribution)
-  3) `make` (the software has been tested on Gnu Make, but other dialects may work)
-  4) The `gfortran` compiler (although the `Makefile` can be edited to use other compilers)
+  3) Python virtual environment manager `venv`
+  4) `make` (the software has been tested on Gnu Make, but other dialects may work)
+  5) The `g++` compiler
+  6) CMake
 
-## Installation with `pip`
+## Automatic installation
+There is an `install.sh` script in the top-level directory which *should* automatically install all
+dependencies (provided you've already installed the pre-requisites). This script as been tested in
+Linux (Fedora/CentOS and Ubuntu) and Windows Subsystem for Linux (running Ubuntu). It
+does not currently work on MacOS on Apple Silicon (e.g. the M1), as PyQT5 has not (yet) been ported
+to this platform. To run it, do:
+
+```
+bash ./install.sh
+```
+
+This will download all python dependencies and will download and build LAMMPS. LAMMPS is a very
+large codebase, so this step may take some time on slow internet connections.
+
+## Manual installation
 This software depends on the following python modules:
   1) `numpy`
-  2) `f2py` Fortran compatibility layer (part of numpy)
-  3) `PyQt5` graphical user interface library
-  4) `pyqtgraph`
+  2) `PyQt5` graphical user interface library
+  3) `pyqtgraph`
 
 These packages can be automatically installed by `pip` via the following command:
 
 ```
-pip install -e .
+pip install -r requirements.txt
 ```
 
-This will run the `setup.py` script, which installs the correct packages in a new folder in the root 
-directory of the repository. `setup.py` also calls `make` to build the Fortran backend and GUI assets.
+You'll also need to install the [LAMMPS molecular dynamics
+software](https://github.com/lammps/lammps) and compile it with [its Python 
+interface](https://docs.lammps.org/Python_head.html). Follow the instructions in the [LAMMPS
+documentation](https://docs.lammps.org/Build.html)
 
-## Manual installation with `make`
-If you already have the required python packages installed, you can simply run `make` to build the
-Fortran backend and GUI assets. It is also possible to build these components separately by running
-`make driver` for Fortran and `make gui` for GUI assets. Note that graphical assets are automatically
-build by the `pyuic5` tool, which should be included in `PyQt` if you installed via `pip`, but you may 
-need to install manually it if you used your OS's package manager. Finally, `make clean` removes the
-compiled Fortran files and GUI assets if you need to do a clean build.
+# Running QtNEMD
+Run the code by doing:
+
+```
+chmod +x main.py
+./main.py
+```
+
+Again, this code has been tested on Fedora and Ubuntu Linux and Windows Subsystem for Linux. It
+does not currently work on MacOS on Apple Silicon (e.g. the M1).

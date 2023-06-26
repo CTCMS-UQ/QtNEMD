@@ -5,7 +5,7 @@ python3 -m pip install --upgrade pip
 pip3 install -r requirements.txt
 
 # Now download and build LAMMPS from the CTCMS branch
-git clone git@github.com:CTCMS-UQ/lammps.git
+git clone https://github.com/CTCMS-UQ/lammps.git
 cd lammps
 git checkout sprint-develop
 
